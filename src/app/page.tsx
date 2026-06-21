@@ -22,7 +22,8 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h1 className="text-2xl font-bold">ダッシュボード</h1>
+          <div className="lisso-eyebrow mb-2">Flavor OS · Dashboard</div>
+          <h1 className="text-2xl font-medium">ダッシュボード</h1>
           <p className="text-muted-foreground text-sm">
             在庫からあなただけのレシピを生成しましょう。
           </p>
@@ -111,9 +112,13 @@ function Stat({ label, value, sub }: { label: string; value: number; sub?: strin
   return (
     <Card>
       <CardContent className="py-4">
-        <div className="text-sm text-muted-foreground">{label}</div>
-        <div className="text-3xl font-bold">{value}</div>
-        {sub && <div className="text-xs text-muted-foreground mt-1">{sub}</div>}
+        <div className="lisso-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+          {label}
+        </div>
+        <div className="font-display text-3xl font-medium mt-1.5">{value}</div>
+        {sub && (
+          <div className="lisso-mono text-[11px] text-muted-foreground mt-1">{sub}</div>
+        )}
       </CardContent>
     </Card>
   );

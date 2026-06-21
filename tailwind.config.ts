@@ -7,7 +7,19 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        display: ["var(--font-display)", "serif"],
+        sans: ["var(--font-body)", "system-ui", "sans-serif"],
+        mono: ["var(--font-data)", "ui-monospace", "monospace"],
+      },
       colors: {
+        // Olive — the Shisha / taste-side accent (taste vectors, gastronomy).
+        olive: {
+          300: "#BFC298",
+          400: "#9DA06F",
+          500: "#7E8154",
+          600: "#5F6240",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
