@@ -29,13 +29,15 @@ export function TasteBars({
       {(Object.keys(LABELS) as (keyof TasteVector)[]).map((dim) => (
         <div key={dim} className="flex items-center gap-2 text-xs">
           <span className="w-12 text-muted-foreground">{LABELS[dim]}</span>
-          <div className="flex-1 h-2 rounded bg-muted overflow-hidden">
+          <div className="flex-1 h-[3px] rounded-full bg-muted overflow-hidden">
             <div
-              className="h-full bg-primary"
+              className="h-full rounded-full bg-olive-500"
               style={{ width: `${Math.max(0, Math.min(10, v[dim])) * 10}%` }}
             />
           </div>
-          <span className="w-5 text-right tabular-nums">{Math.round(v[dim])}</span>
+          <span className="lisso-mono w-5 text-right text-muted-foreground">
+            {Math.round(v[dim])}
+          </span>
         </div>
       ))}
     </div>

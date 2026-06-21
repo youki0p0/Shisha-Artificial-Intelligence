@@ -9,7 +9,7 @@ export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElemen
   return (
     <div
       className={cn(
-        "rounded-lg border bg-card text-card-foreground shadow-sm",
+        "rounded-md border bg-card text-card-foreground",
         className,
       )}
       {...props}
@@ -41,10 +41,10 @@ export function Button({
   ...props
 }: ButtonProps) {
   const variants: Record<string, string> = {
-    default: "bg-primary text-primary-foreground hover:opacity-90",
-    outline: "border bg-transparent hover:bg-secondary",
-    ghost: "bg-transparent hover:bg-secondary",
-    destructive: "bg-destructive text-destructive-foreground hover:opacity-90",
+    default: "bg-primary text-primary-foreground border border-primary hover:bg-[hsl(var(--ring))]",
+    outline: "border border-border bg-transparent hover:border-foreground/40 hover:text-foreground",
+    ghost: "bg-transparent text-muted-foreground hover:text-foreground hover:bg-secondary",
+    destructive: "bg-destructive text-destructive-foreground border border-destructive hover:opacity-90",
   };
   const sizes: Record<string, string> = {
     sm: "h-8 px-3 text-sm",
@@ -53,7 +53,7 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-md font-medium transition disabled:opacity-50 disabled:pointer-events-none",
+        "inline-flex items-center justify-center gap-2 rounded-sm font-medium tracking-[0.02em] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:opacity-45 disabled:pointer-events-none",
         variants[variant],
         sizes[size],
         className,
@@ -71,16 +71,16 @@ export function Badge({
   variant?: "default" | "outline" | "success" | "warn" | "muted";
 }) {
   const variants: Record<string, string> = {
-    default: "bg-primary/10 text-primary border-primary/20",
+    default: "bg-[hsl(var(--accent-foreground)/0.12)] text-[hsl(var(--accent-foreground))] border-[hsl(var(--accent-foreground)/0.28)]",
     outline: "border-border text-foreground",
-    success: "bg-emerald-100 text-emerald-800 border-emerald-200",
-    warn: "bg-amber-100 text-amber-800 border-amber-200",
+    success: "bg-[#7E9E84]/15 text-[#9DBBA3] border-[#7E9E84]/30",
+    warn: "bg-[#C2A86A]/15 text-[#D8C58C] border-[#C2A86A]/30",
     muted: "bg-muted text-muted-foreground border-border",
   };
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium",
+        "inline-flex items-center rounded-sm border px-2 py-0.5 text-xs font-medium tracking-[0.02em]",
         variants[variant],
         className,
       )}
@@ -96,7 +96,7 @@ export const Input = React.forwardRef<
   <input
     ref={ref}
     className={cn(
-      "flex h-10 w-full rounded-md border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring",
+      "flex h-10 w-full rounded-sm border border-input bg-background px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/40",
       className,
     )}
     {...props}
@@ -111,7 +111,7 @@ export const Textarea = React.forwardRef<
   <textarea
     ref={ref}
     className={cn(
-      "flex min-h-20 w-full rounded-md border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring",
+      "flex min-h-20 w-full rounded-sm border border-input bg-background px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/40",
       className,
     )}
     {...props}
@@ -126,7 +126,7 @@ export const Select = React.forwardRef<
   <select
     ref={ref}
     className={cn(
-      "flex h-10 w-full rounded-md border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring",
+      "flex h-10 w-full rounded-sm border border-input bg-background px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/40",
       className,
     )}
     {...props}
