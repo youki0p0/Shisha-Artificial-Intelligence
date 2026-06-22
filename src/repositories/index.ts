@@ -10,6 +10,7 @@ import {
   UserInventoryItem,
 } from "@/domain/types";
 import { getDb, mutate } from "./jsonStore";
+import { createSupabaseRepositories } from "./supabase";
 import { Repositories } from "./types";
 
 function textHit(haystacks: string[], q: string): boolean {
@@ -229,8 +230,23 @@ const repositories: Repositories = {
   },
 };
 
-/** Single access point for all repositories. Swap implementation here later. */
+/**
+ * Single access point for all repositories.
+ *
+ * Defaults to the JSON-file store. Set DB_DRIVER=supabase (with SUPABASE_URL +
+ * SUPABASE_SERVICE_ROLE_KEY) to use the Supabase-backed implementation; the
+ * client is created lazily and cached so unrelated code paths never need the
+ * env vars.
+ */
+let supabaseRepositories: Repositories | null = null;
+
 export function getRepositories(): Repositories {
+  if (process.env.DB_DRIVER === "supabase") {
+    if (!supabaseRepositories) {
+      supabaseRepositories = createSupabaseRepositories();
+    }
+    return supabaseRepositories;
+  }
   return repositories;
 }
 
