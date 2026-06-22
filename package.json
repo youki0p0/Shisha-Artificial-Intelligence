@@ -10,10 +10,12 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx scripts/seed.ts",
+    "seed:supabase": "node --env-file-if-exists=.env.local --import tsx scripts/seed-supabase.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
+    "@supabase/supabase-js": "^2.47.10",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.469.0",
