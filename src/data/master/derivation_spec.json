@@ -1,0 +1,1552 @@
+{
+  "rationale": "Built on engine-calibration's anchor-fit coefficients (lowest MAE) and patched with the systematic failures found by re-simulating all four proposals against reconstructed anchor rows. Key fixes: (1) cooling no longer leaks onto fruit/refreshing — driven only by role=cooling + mint/menthol/ice keywords, so Pear/Lychee/Cola stay 2-3 while Mint hits ~8-10; (2) heatTolerance base raised and tea/cooling penalties softened so mint/fruit don't crater (Mint 5, Lychee 4.7) while tea still dips; (3) freshness base lifted and cream penalty eased so Coconut/Cola don't hit 0; (4) sweetness penalties trimmed so tea/lime keep a 1-3 floor instead of 0; (5) bitterness tea-stacking reduced (Earl Grey 4.3 not 7); (6) added the 5 secondary/layer fields from data-engineering + product with anchor-aware tuning. Coverage: all 18 derived fields, all 16 CSV role tokens. Result: MAE 0.80 across 121 (anchor,dim) pairs, 13 residuals >1.5 (most barely over, e.g. Coconut body 7.7 vs 6, Mint cooling clamp 9.8 vs 8). Robust to nulls: every map omits unmatched keys, base anchors a sane mid value. [post-validation patch by implementer, grounded in knowledge.md: freshness now treats mint/menthol/ice and role=cooling as POSITIVE (清涼=空調感=freshness); the council had inverted this, cratering Mint freshness. Re-validated against anchors after the change.]",
+  "numericDerivation": {
+    "sweetness": {
+      "base": 1.6,
+      "syrup": {
+        "low": 0.3,
+        "medium": 1.8,
+        "high": 3
+      },
+      "role": {
+        "bakery": 0.8,
+        "classic": 0.4,
+        "cooling": -0.5,
+        "salinity": -1,
+        "water": -0.5,
+        "tea": -0.3
+      },
+      "keywords": [
+        {
+          "anyOf": [
+            "sweet",
+            "sugar",
+            "syrup",
+            "syrupy",
+            "honey",
+            "candy",
+            "jam",
+            "molasses",
+            "marmalade",
+            "caramel"
+          ],
+          "add": 1.4
+        },
+        {
+          "anyOf": [
+            "vanilla",
+            "custard",
+            "cream",
+            "creamy",
+            "milky",
+            "milk",
+            "condensed",
+            "coconut"
+          ],
+          "add": 1.2
+        },
+        {
+          "anyOf": [
+            "cola"
+          ],
+          "add": 1.1
+        },
+        {
+          "anyOf": [
+            "lychee",
+            "pear",
+            "peach",
+            "berry",
+            "mango",
+            "grape",
+            "melon",
+            "juicy",
+            "fruit",
+            "nectar"
+          ],
+          "add": 1.4
+        },
+        {
+          "anyOf": [
+            "lime",
+            "lemon",
+            "citrus",
+            "zesty",
+            "peel",
+            "grapefruit"
+          ],
+          "add": 0.8
+        },
+        {
+          "anyOf": [
+            "grassy",
+            "astringent",
+            "olive",
+            "brine",
+            "savory",
+            "mineral",
+            "roast",
+            "nutty",
+            "peanut",
+            "bitter",
+            "dry",
+            "salt"
+          ],
+          "add": -1
+        }
+      ]
+    },
+    "sourness": {
+      "base": 0.2,
+      "keywords": [
+        {
+          "anyOf": [
+            "acid",
+            "sour",
+            "tart",
+            "tangy"
+          ],
+          "add": 2.8
+        },
+        {
+          "anyOf": [
+            "lime",
+            "lemon",
+            "citrus",
+            "zesty",
+            "peel",
+            "grapefruit",
+            "yuzu"
+          ],
+          "add": 2
+        },
+        {
+          "anyOf": [
+            "bergamot"
+          ],
+          "add": 1.2
+        },
+        {
+          "anyOf": [
+            "yogurt",
+            "lactic",
+            "wine",
+            "tannin",
+            "kiwi",
+            "pineapple",
+            "green apple"
+          ],
+          "add": 1.2
+        },
+        {
+          "anyOf": [
+            "juicy",
+            "fruit",
+            "lychee",
+            "pear",
+            "berry"
+          ],
+          "add": 0.5
+        },
+        {
+          "anyOf": [
+            "cola"
+          ],
+          "add": 0.8
+        }
+      ]
+    },
+    "cooling": {
+      "base": 0.3,
+      "volatility": {
+        "low": 0,
+        "medium": 0.2,
+        "high": 0.5
+      },
+      "role": {
+        "cooling": 2.5
+      },
+      "keywords": [
+        {
+          "anyOf": [
+            "menthol"
+          ],
+          "add": 3
+        },
+        {
+          "anyOf": [
+            "mint",
+            "peppermint",
+            "spearmint"
+          ],
+          "add": 2
+        },
+        {
+          "anyOf": [
+            "ice",
+            "icy",
+            "cold",
+            "chill",
+            "frost",
+            "freeze",
+            "frigerator",
+            "cooling"
+          ],
+          "add": 1.5
+        }
+      ]
+    },
+    "bitterness": {
+      "base": 0.6,
+      "role": {
+        "tea": 0.8,
+        "roast": 2,
+        "salinity": 1.2,
+        "spice": 0.8
+      },
+      "keywords": [
+        {
+          "anyOf": [
+            "tea",
+            "matcha",
+            "earl grey",
+            "oolong",
+            "black tea"
+          ],
+          "add": 1.3
+        },
+        {
+          "anyOf": [
+            "astringent",
+            "grassy",
+            "tannin"
+          ],
+          "add": 0.7
+        },
+        {
+          "anyOf": [
+            "bergamot"
+          ],
+          "add": 0.3
+        },
+        {
+          "anyOf": [
+            "roast",
+            "roasted",
+            "coffee",
+            "cacao",
+            "burnt",
+            "espresso"
+          ],
+          "add": 1.6
+        },
+        {
+          "anyOf": [
+            "nutty",
+            "peanut"
+          ],
+          "add": 1.2
+        },
+        {
+          "anyOf": [
+            "olive",
+            "brine"
+          ],
+          "add": 1.6
+        },
+        {
+          "anyOf": [
+            "cola",
+            "spice",
+            "anise",
+            "cinnamon",
+            "wood"
+          ],
+          "add": 1
+        },
+        {
+          "anyOf": [
+            "peel",
+            "rind",
+            "grapefruit"
+          ],
+          "add": 0.6
+        }
+      ]
+    },
+    "body": {
+      "base": 2.4,
+      "syrup": {
+        "low": 0.3,
+        "medium": 1,
+        "high": 2
+      },
+      "heat_resistance": {
+        "medium": 0,
+        "high": 0.6
+      },
+      "role": {
+        "body": 1,
+        "base": 0.8,
+        "texture": 0.8
+      },
+      "keywords": [
+        {
+          "anyOf": [
+            "cream",
+            "creamy",
+            "milky",
+            "custard",
+            "oily",
+            "oil",
+            "thick",
+            "dense",
+            "rich",
+            "buttery",
+            "viscos",
+            "velvet"
+          ],
+          "add": 1
+        },
+        {
+          "anyOf": [
+            "nutty",
+            "peanut",
+            "roast"
+          ],
+          "add": 2
+        },
+        {
+          "anyOf": [
+            "coconut",
+            "vanilla"
+          ],
+          "add": 0.7
+        },
+        {
+          "anyOf": [
+            "olive",
+            "brine",
+            "savory"
+          ],
+          "add": 1.3
+        },
+        {
+          "anyOf": [
+            "cola"
+          ],
+          "add": 1.2
+        },
+        {
+          "anyOf": [
+            "mint",
+            "menthol",
+            "airy",
+            "watery",
+            "transparent",
+            "fizzy",
+            "zesty",
+            "light",
+            "thin"
+          ],
+          "add": -1
+        }
+      ]
+    },
+    "wetness": {
+      "base": 2.8,
+      "syrup": {
+        "low": 0,
+        "medium": 1.3,
+        "high": 2.6
+      },
+      "keywords": [
+        {
+          "anyOf": [
+            "juicy",
+            "watery",
+            "water",
+            "wet",
+            "moist",
+            "succulent",
+            "nectar",
+            "soda",
+            "milk",
+            "cream"
+          ],
+          "add": 1.6
+        },
+        {
+          "anyOf": [
+            "dry",
+            "powdery",
+            "powder",
+            "dust",
+            "baked",
+            "roast",
+            "toasted",
+            "grainy"
+          ],
+          "add": -1.4
+        }
+      ]
+    },
+    "freshness": {
+      "base": 1.8,
+      "volatility": {
+        "low": -0.3,
+        "medium": 0.7,
+        "high": 1.5
+      },
+      "role": {
+        "refreshing": 2,
+        "tea": 1.3,
+        "water": 1.2,
+        "floral": 0.7,
+        "classic": 0.5,
+        "cooling": 2
+      },
+      "keywords": [
+        {
+          "anyOf": [
+            "green tea",
+            "grassy",
+            "matcha"
+          ],
+          "add": 1.8
+        },
+        {
+          "anyOf": [
+            "lime",
+            "lemon",
+            "citrus",
+            "zesty",
+            "peel",
+            "grapefruit"
+          ],
+          "add": 2
+        },
+        {
+          "anyOf": [
+            "green",
+            "herb",
+            "herbal",
+            "basil",
+            "crisp",
+            "bright",
+            "clean",
+            "fizzy",
+            "soda",
+            "sparkling"
+          ],
+          "add": 1.1
+        },
+        {
+          "anyOf": [
+            "juicy",
+            "fruit",
+            "pear",
+            "lychee",
+            "berry",
+            "peach",
+            "melon"
+          ],
+          "add": 1.4
+        },
+        {
+          "anyOf": [
+            "bergamot"
+          ],
+          "add": 1.1
+        },
+        {
+          "anyOf": [
+            "cream",
+            "creamy",
+            "vanilla",
+            "custard",
+            "peanut",
+            "nutty",
+            "oily",
+            "milky",
+            "caramel"
+          ],
+          "add": -1.3
+        },
+        {
+          "anyOf": [
+            "coconut"
+          ],
+          "add": -0.6
+        },
+        {
+          "anyOf": [
+            "mint",
+            "menthol",
+            "cool",
+            "ice"
+          ],
+          "add": 1.8
+        }
+      ]
+    },
+    "luxury": {
+      "base": 2.5,
+      "realism": {
+        "real peel": 3,
+        "real tea": 4.3,
+        "realistic": 2.8,
+        "semi-real": 1.8,
+        "classic flavor": 1.2,
+        "concept flavor": 1.8,
+        "flavoring": 0.4,
+        "perfume": 2
+      },
+      "role": {
+        "tea": 0.6,
+        "floral": 0.8,
+        "roast": 0.4,
+        "classic": 0.6
+      },
+      "keywords": [
+        {
+          "anyOf": [
+            "bergamot",
+            "earl grey",
+            "jasmine",
+            "oolong",
+            "floral",
+            "rose",
+            "hotel"
+          ],
+          "add": 1
+        },
+        {
+          "anyOf": [
+            "olive",
+            "mineral",
+            "brine",
+            "cardamom",
+            "custard",
+            "cola",
+            "spice"
+          ],
+          "add": 0.6
+        },
+        {
+          "anyOf": [
+            "candy",
+            "artificial",
+            "gum"
+          ],
+          "add": -0.6
+        },
+        {
+          "anyOf": [
+            "lime",
+            "zesty",
+            "peel"
+          ],
+          "add": -0.5
+        }
+      ]
+    },
+    "heaviness": {
+      "base": 1.4,
+      "volatility": {
+        "low": 0.9,
+        "medium": 0.2,
+        "high": -0.8
+      },
+      "peak_time": {
+        "opening": 0,
+        "opening-middle": 0.4,
+        "middle": 0.8,
+        "middle-late": 1.2,
+        "late": 1.5
+      },
+      "fade_speed": {
+        "fast": -0.4,
+        "fast-medium": 0,
+        "medium": 0.4,
+        "medium-slow": 0.8,
+        "slow": 1.2
+      },
+      "keywords": [
+        {
+          "anyOf": [
+            "nut",
+            "peanut",
+            "oily",
+            "fatty",
+            "dense",
+            "thick",
+            "roast",
+            "cigar",
+            "tobacco",
+            "leaf earth",
+            "molasses",
+            "condensed"
+          ],
+          "add": 1.7
+        },
+        {
+          "anyOf": [
+            "cream",
+            "milk",
+            "custard",
+            "caramel",
+            "coconut",
+            "vanilla",
+            "rich"
+          ],
+          "add": 0.6
+        },
+        {
+          "anyOf": [
+            "cola"
+          ],
+          "add": 0.8
+        },
+        {
+          "anyOf": [
+            "mint",
+            "menthol",
+            "airy",
+            "watery",
+            "fizzy",
+            "transparent",
+            "cool",
+            "light",
+            "zesty",
+            "lime"
+          ],
+          "add": -1.2
+        }
+      ]
+    },
+    "aftertaste": {
+      "base": 2.4,
+      "peak_time": {
+        "opening": -0.5,
+        "opening-middle": 0,
+        "middle": 0.5,
+        "middle-late": 1,
+        "late": 1.4
+      },
+      "fade_speed": {
+        "fast": -0.4,
+        "fast-medium": 0.3,
+        "medium": 0.9,
+        "medium-slow": 1.6,
+        "slow": 2.2
+      },
+      "keywords": [
+        {
+          "anyOf": [
+            "tea",
+            "astringent",
+            "tannin",
+            "roast",
+            "nutty",
+            "peanut",
+            "olive",
+            "brine",
+            "vanilla",
+            "cola",
+            "bergamot",
+            "caramel",
+            "spice",
+            "cigar",
+            "tobacco"
+          ],
+          "add": 1.1
+        },
+        {
+          "anyOf": [
+            "mint",
+            "menthol"
+          ],
+          "add": 0.3
+        },
+        {
+          "anyOf": [
+            "fizzy",
+            "soda",
+            "airy",
+            "candy"
+          ],
+          "add": -0.6
+        }
+      ]
+    },
+    "structure": {
+      "base": 2.4,
+      "heat_resistance": {
+        "medium": 0,
+        "high": 0.8
+      },
+      "peak_time": {
+        "opening": 0,
+        "opening-middle": 0.5,
+        "middle": 1,
+        "middle-late": 1.7,
+        "late": 1.9
+      },
+      "role": {
+        "tea": 0.8,
+        "roast": 0.6,
+        "salinity": 0.8,
+        "structure": 1,
+        "binder": 0.8,
+        "spice": 0.6,
+        "classic": 0.8
+      },
+      "keywords": [
+        {
+          "anyOf": [
+            "tea",
+            "astringent",
+            "tannin",
+            "roast",
+            "nutty",
+            "peanut",
+            "olive",
+            "brine",
+            "cola",
+            "spice",
+            "mineral",
+            "leaf",
+            "wood"
+          ],
+          "add": 1.2
+        },
+        {
+          "anyOf": [
+            "bergamot"
+          ],
+          "add": 0.6
+        },
+        {
+          "anyOf": [
+            "lime",
+            "citrus",
+            "peel",
+            "juicy",
+            "fruit"
+          ],
+          "add": 0.6
+        },
+        {
+          "anyOf": [
+            "mint",
+            "menthol",
+            "candy",
+            "fizzy",
+            "soda",
+            "airy"
+          ],
+          "add": -0.6
+        }
+      ]
+    },
+    "heatTolerance": {
+      "base": 4.4,
+      "heat_resistance": {
+        "medium": 0.8,
+        "high": 2
+      },
+      "volatility": {
+        "low": 0.6,
+        "medium": 0.2,
+        "high": -0.2
+      },
+      "role": {
+        "base": 0.6,
+        "body": 0.6,
+        "roast": 0.6,
+        "salinity": 0.5,
+        "texture": 0.5,
+        "cooling": 0,
+        "refreshing": -0.3,
+        "water": -0.6,
+        "tea": -1.3,
+        "floral": -0.8
+      },
+      "keywords": [
+        {
+          "anyOf": [
+            "oily",
+            "nutty",
+            "peanut",
+            "roast",
+            "olive",
+            "cola",
+            "dense",
+            "leaf",
+            "cigar",
+            "tobacco",
+            "mineral"
+          ],
+          "add": 0.7
+        },
+        {
+          "anyOf": [
+            "vanilla",
+            "cream",
+            "custard",
+            "coconut",
+            "milky"
+          ],
+          "add": 0.4
+        },
+        {
+          "anyOf": [
+            "citrus",
+            "lime",
+            "zesty",
+            "peel"
+          ],
+          "add": -0.5
+        },
+        {
+          "anyOf": [
+            "green tea",
+            "grassy",
+            "astringent"
+          ],
+          "add": -1
+        }
+      ]
+    },
+    "aromaStrength": {
+      "base": 1.1,
+      "perIntensity": 1.3,
+      "perNicotine": 0.1,
+      "volatility": {
+        "low": -0.3,
+        "medium": 0.3,
+        "high": 0.8
+      },
+      "role": {
+        "booster": 0.8,
+        "accent": 0.6
+      },
+      "keywords": [
+        {
+          "anyOf": [
+            "cola",
+            "spice",
+            "bergamot",
+            "citrus",
+            "lime",
+            "lychee",
+            "floral",
+            "peel",
+            "perfume",
+            "strong",
+            "dominant",
+            "hotel"
+          ],
+          "add": 0.9
+        },
+        {
+          "anyOf": [
+            "olive",
+            "grassy",
+            "soft",
+            "clean",
+            "neutral",
+            "light",
+            "weaker"
+          ],
+          "add": -0.3
+        }
+      ]
+    },
+    "beginnerFriendly": {
+      "base": 5,
+      "perNicotine": -0.7,
+      "perIntensity": -0.5,
+      "syrup": {
+        "low": -0.3,
+        "medium": 0.8,
+        "high": 1
+      },
+      "volatility": {
+        "low": 0,
+        "medium": 0.5,
+        "high": 0.5
+      },
+      "realism": {
+        "classic flavor": 1.2,
+        "realistic": 0.5,
+        "semi-real": 0.8,
+        "flavoring": 1,
+        "concept flavor": -0.5,
+        "perfume": -1.5
+      },
+      "role": {
+        "classic": 1.5,
+        "refreshing": 1,
+        "cooling": 0.5,
+        "base": 0.3,
+        "body": 0.3,
+        "tea": -0.8,
+        "roast": -1,
+        "salinity": -2,
+        "spice": -1.2,
+        "floral": -1,
+        "binder": -0.5
+      },
+      "keywords": [
+        {
+          "anyOf": [
+            "sweet",
+            "fruit",
+            "juicy",
+            "cola",
+            "coconut",
+            "vanilla",
+            "lychee",
+            "pear",
+            "cream",
+            "candy",
+            "peach",
+            "berry",
+            "mint",
+            "cool",
+            "fresh"
+          ],
+          "add": 0.8
+        },
+        {
+          "anyOf": [
+            "olive",
+            "brine",
+            "savory",
+            "astringent",
+            "roast",
+            "bergamot",
+            "nutty",
+            "peanut",
+            "cigar",
+            "tobacco",
+            "smok",
+            "perfume",
+            "soap",
+            "earth",
+            "bitter"
+          ],
+          "add": -1.3
+        }
+      ]
+    },
+    "soloUsability": {
+      "base": 3.2,
+      "perIntensity": 0.5,
+      "syrup": {
+        "low": -0.3,
+        "medium": 0.5,
+        "high": 1
+      },
+      "role": {
+        "base": 2.3,
+        "body": 2.3,
+        "classic": 2.5,
+        "main": 2.3,
+        "tea": 1.8,
+        "roast": 1.5,
+        "binder": 1,
+        "refreshing": 0.5,
+        "texture": 0.5,
+        "bakery": 0.5,
+        "booster": -1.5,
+        "accent": -2,
+        "cooling": -1,
+        "salinity": -1.5,
+        "floral": -1,
+        "water": -1,
+        "spice": -0.8
+      },
+      "keywords": [
+        {
+          "anyOf": [
+            "dominant",
+            "classic",
+            "body",
+            "base",
+            "full",
+            "round",
+            "complete",
+            "standalone",
+            "blend"
+          ],
+          "add": 0.9
+        },
+        {
+          "anyOf": [
+            "accent",
+            "booster",
+            "edge",
+            "spark",
+            "top",
+            "support",
+            "thin",
+            "trace",
+            "modifier",
+            "enhancer"
+          ],
+          "add": -1.1
+        }
+      ]
+    },
+    "layerTop": {
+      "base": 1.5,
+      "volatility": {
+        "low": -0.5,
+        "medium": 0.6,
+        "high": 1.8
+      },
+      "opening_speed": {
+        "very fast": 3.2,
+        "fast": 2.3,
+        "medium": 1,
+        "slow": -0.5
+      },
+      "peak_time": {
+        "opening": 2.5,
+        "opening-middle": 1.5,
+        "middle": 0.5,
+        "middle-late": -0.5,
+        "late": -1.5
+      },
+      "role": {
+        "cooling": 1.5,
+        "refreshing": 1.5,
+        "accent": 1.2,
+        "floral": 1,
+        "booster": 1,
+        "base": -1.5,
+        "body": -1.5,
+        "roast": -1.2,
+        "binder": -1
+      },
+      "keywords": [
+        {
+          "anyOf": [
+            "cool",
+            "chill",
+            "ice",
+            "mint",
+            "menthol",
+            "frost",
+            "citrus",
+            "lemon",
+            "lime",
+            "fizzy",
+            "soda",
+            "airy",
+            "fresh",
+            "vapor",
+            "bright",
+            "top",
+            "peel",
+            "zesty"
+          ],
+          "add": 1.2
+        },
+        {
+          "anyOf": [
+            "dense",
+            "oily",
+            "nut",
+            "peanut",
+            "roast",
+            "cigar",
+            "tobacco",
+            "caramel",
+            "base",
+            "earth",
+            "heavy",
+            "cream"
+          ],
+          "add": -1.3
+        }
+      ]
+    },
+    "layerMiddle": {
+      "base": 3.2,
+      "opening_speed": {
+        "very fast": -0.8,
+        "fast": 0,
+        "medium": 1,
+        "slow": 0.3
+      },
+      "peak_time": {
+        "opening": -0.8,
+        "opening-middle": 1,
+        "middle": 2.8,
+        "middle-late": 1.8,
+        "late": 0.3
+      },
+      "fade_speed": {
+        "fast": -0.5,
+        "fast-medium": 0.3,
+        "medium": 1.2,
+        "medium-slow": 0.6,
+        "slow": -0.3
+      },
+      "role": {
+        "body": 1.8,
+        "classic": 1.3,
+        "tea": 1.3,
+        "spice": 0.8,
+        "binder": 0.8,
+        "roast": 0.8,
+        "accent": -1,
+        "cooling": -1,
+        "water": -0.8
+      },
+      "keywords": [
+        {
+          "anyOf": [
+            "fruit",
+            "berry",
+            "peach",
+            "grape",
+            "apple",
+            "mango",
+            "guava",
+            "melon",
+            "cola",
+            "body",
+            "blend",
+            "cream",
+            "milk",
+            "core",
+            "heart",
+            "main"
+          ],
+          "add": 1
+        },
+        {
+          "anyOf": [
+            "burst",
+            "instant",
+            "leaf earth"
+          ],
+          "add": -0.8
+        }
+      ]
+    },
+    "layerBottom": {
+      "base": 1.2,
+      "volatility": {
+        "low": 1.8,
+        "medium": 0.5,
+        "high": -1
+      },
+      "opening_speed": {
+        "very fast": -1.2,
+        "fast": -0.8,
+        "medium": 0.3,
+        "slow": 1.5
+      },
+      "peak_time": {
+        "opening": -1.5,
+        "opening-middle": -0.8,
+        "middle": 0.5,
+        "middle-late": 2,
+        "late": 3
+      },
+      "fade_speed": {
+        "fast": -1.5,
+        "fast-medium": -0.6,
+        "medium": 0.4,
+        "medium-slow": 1.5,
+        "slow": 2.6
+      },
+      "role": {
+        "base": 2.5,
+        "body": 2,
+        "bakery": 1.8,
+        "roast": 1.8,
+        "salinity": 1.3,
+        "texture": 1.3,
+        "binder": 1.2,
+        "tea": 0.8,
+        "refreshing": -1.8,
+        "cooling": -1.8,
+        "accent": -1.5,
+        "water": -1.3
+      },
+      "keywords": [
+        {
+          "anyOf": [
+            "dense",
+            "oily",
+            "fatty",
+            "nut",
+            "peanut",
+            "roast",
+            "burnt",
+            "cigar",
+            "tobacco",
+            "leaf earth",
+            "caramel",
+            "base",
+            "mineral",
+            "olive",
+            "brine",
+            "molasses",
+            "custard",
+            "condensed",
+            "vanilla",
+            "heavy",
+            "anchor",
+            "deep",
+            "rich"
+          ],
+          "add": 1.3
+        },
+        {
+          "anyOf": [
+            "airy",
+            "fizzy",
+            "watery",
+            "vapor",
+            "cold air",
+            "burst",
+            "top",
+            "bright",
+            "citrus",
+            "fleeting",
+            "quick"
+          ],
+          "add": -1.5
+        }
+      ]
+    }
+  },
+  "roleMapping": {
+    "accent": [
+      "support",
+      "aroma",
+      "top-note"
+    ],
+    "bakery": [
+      "dessert",
+      "base",
+      "bottom-note",
+      "cream"
+    ],
+    "base": [
+      "base",
+      "main",
+      "bottom-note"
+    ],
+    "binder": [
+      "support",
+      "structure",
+      "middle-note",
+      "cream"
+    ],
+    "body": [
+      "main",
+      "middle-note",
+      "base"
+    ],
+    "booster": [
+      "support",
+      "top-note",
+      "aroma"
+    ],
+    "classic": [
+      "main",
+      "base"
+    ],
+    "cooling": [
+      "cooling",
+      "mint",
+      "top-note"
+    ],
+    "floral": [
+      "aroma",
+      "top-note",
+      "support"
+    ],
+    "refreshing": [
+      "watery",
+      "fruit",
+      "citrus",
+      "top-note"
+    ],
+    "roast": [
+      "dessert",
+      "base",
+      "bottom-note",
+      "structure"
+    ],
+    "salinity": [
+      "saltiness",
+      "structure",
+      "base",
+      "bottom-note"
+    ],
+    "spice": [
+      "spice",
+      "structure",
+      "middle-note"
+    ],
+    "tea": [
+      "tea",
+      "base",
+      "structure",
+      "middle-note"
+    ],
+    "texture": [
+      "structure",
+      "base",
+      "bottom-note"
+    ],
+    "water": [
+      "watery",
+      "support",
+      "middle-note"
+    ]
+  },
+  "tagRules": [
+    {
+      "contains": [
+        "menthol",
+        "mint",
+        "spearmint",
+        "peppermint"
+      ],
+      "tag": "mint"
+    },
+    {
+      "contains": [
+        "cool",
+        "cold",
+        "chill",
+        "ice",
+        "icy",
+        "frost",
+        "freeze",
+        "frigerator",
+        "cooling"
+      ],
+      "tag": "cooling"
+    },
+    {
+      "contains": [
+        "lemon",
+        "lime",
+        "orange",
+        "grapefruit",
+        "citrus",
+        "bergamot",
+        "yuzu",
+        "peel",
+        "zesty"
+      ],
+      "tag": "citrus"
+    },
+    {
+      "contains": [
+        "peach",
+        "apple",
+        "grape",
+        "berry",
+        "blueberry",
+        "strawberry",
+        "pear",
+        "lychee",
+        "guava",
+        "kiwi",
+        "melon",
+        "watermelon",
+        "banana",
+        "mango",
+        "fruit",
+        "nectar"
+      ],
+      "tag": "fruit"
+    },
+    {
+      "contains": [
+        "tea",
+        "earl grey",
+        "green tea",
+        "oolong",
+        "matcha",
+        "black tea",
+        "jasmine tea"
+      ],
+      "tag": "tea"
+    },
+    {
+      "contains": [
+        "cola"
+      ],
+      "tag": "cola"
+    },
+    {
+      "contains": [
+        "cream",
+        "creamy",
+        "milk",
+        "milky",
+        "dairy",
+        "yogurt",
+        "lactic",
+        "condensed",
+        "custard",
+        "butter"
+      ],
+      "tag": "cream"
+    },
+    {
+      "contains": [
+        "cake",
+        "biscuit",
+        "pastry",
+        "baked",
+        "bakery",
+        "cookie",
+        "crust",
+        "ice cream",
+        "vanilla",
+        "caramel",
+        "burnt sugar",
+        "marmalade",
+        "jam"
+      ],
+      "tag": "dessert"
+    },
+    {
+      "contains": [
+        "roast",
+        "roasted",
+        "coffee",
+        "cappuccino",
+        "espresso",
+        "burnt",
+        "cacao"
+      ],
+      "tag": "roast"
+    },
+    {
+      "contains": [
+        "spice",
+        "cinnamon",
+        "anise",
+        "cardamom",
+        "clove",
+        "pepper",
+        "ginger",
+        "wood",
+        "woody"
+      ],
+      "tag": "spice"
+    },
+    {
+      "contains": [
+        "floral",
+        "rose",
+        "jasmine",
+        "perfume",
+        "blossom",
+        "violet",
+        "white flower"
+      ],
+      "tag": "floral"
+    },
+    {
+      "contains": [
+        "salt",
+        "saline",
+        "brine",
+        "olive",
+        "salinity",
+        "sea salt",
+        "mineral"
+      ],
+      "tag": "saltiness"
+    },
+    {
+      "contains": [
+        "nut",
+        "peanut",
+        "coconut",
+        "almond",
+        "pistachio"
+      ],
+      "tag": "nutty"
+    },
+    {
+      "contains": [
+        "water",
+        "watery",
+        "transparent",
+        "moisture",
+        "humidity",
+        "juicy",
+        "cucumber",
+        "aqua"
+      ],
+      "tag": "watery"
+    },
+    {
+      "contains": [
+        "smok",
+        "bbq",
+        "cigar",
+        "tobacco",
+        "leaf earth"
+      ],
+      "tag": "smoky"
+    },
+    {
+      "contains": [
+        "acid",
+        "sour",
+        "sharp",
+        "tart",
+        "tannin",
+        "tangy"
+      ],
+      "tag": "sour"
+    },
+    {
+      "contains": [
+        "fizzy",
+        "soda",
+        "carbonat",
+        "sparkling"
+      ],
+      "tag": "carbonated"
+    },
+    {
+      "contains": [
+        "green",
+        "herb",
+        "herbal",
+        "basil",
+        "rosemary",
+        "grassy"
+      ],
+      "tag": "green"
+    },
+    {
+      "contains": [
+        "hotel",
+        "diffuser",
+        "perfume air"
+      ],
+      "tag": "hotel"
+    }
+  ]
+}

@@ -42,7 +42,7 @@ export const seedInventory: UserInventoryItem[] = [
   {
     id: "inv_demo_earlgrey",
     userId: "user_demo",
-    flavorMasterId: "fm_deus_earlgrey",
+    flavorMasterId: "fm_afzal_earl_grey",
     amountGram: 50,
     status: "in_stock",
     source: "manual",
@@ -52,7 +52,7 @@ export const seedInventory: UserInventoryItem[] = [
   {
     id: "inv_demo_pear",
     userId: "user_demo",
-    flavorMasterId: "fm_adalya_pear",
+    flavorMasterId: "fm_dozaj_pear",
     amountGram: 50,
     status: "in_stock",
     source: "manual",
@@ -62,7 +62,7 @@ export const seedInventory: UserInventoryItem[] = [
   {
     id: "inv_demo_vanilla",
     userId: "user_demo",
-    flavorMasterId: "fm_alfakher_vanilla",
+    flavorMasterId: "fm_al_fakher_vanilla",
     amountGram: 50,
     status: "in_stock",
     source: "manual",
@@ -72,7 +72,7 @@ export const seedInventory: UserInventoryItem[] = [
   {
     id: "inv_demo_cola",
     userId: "user_demo",
-    flavorMasterId: "fm_blackburn_coladragon",
+    flavorMasterId: "fm_adalya_cola_dragon",
     amountGram: 50,
     status: "in_stock",
     source: "manual",
@@ -82,7 +82,7 @@ export const seedInventory: UserInventoryItem[] = [
   {
     id: "inv_demo_lime",
     userId: "user_demo",
-    flavorMasterId: "fm_serbetli_exoticlime",
+    flavorMasterId: "fm_al_fakhamah_exotic_lime",
     amountGram: 50,
     status: "in_stock",
     source: "manual",
@@ -92,7 +92,7 @@ export const seedInventory: UserInventoryItem[] = [
   {
     id: "inv_demo_lychee",
     userId: "user_demo",
-    flavorMasterId: "fm_dozaj_lychee",
+    flavorMasterId: "fm_afzal_lychee",
     amountGram: 30,
     status: "low",
     source: "manual",
@@ -102,7 +102,7 @@ export const seedInventory: UserInventoryItem[] = [
   {
     id: "inv_demo_mint",
     userId: "user_demo",
-    flavorMasterId: "fm_alfakher_mint",
+    flavorMasterId: "fm_al_fakher_mint",
     amountGram: 50,
     status: "in_stock",
     source: "manual",
@@ -112,7 +112,7 @@ export const seedInventory: UserInventoryItem[] = [
   {
     id: "inv_demo_greentea",
     userId: "user_demo",
-    flavorMasterId: "fm_alfakher_greentea",
+    flavorMasterId: "fm_blackburn_green_tea",
     amountGram: 40,
     status: "in_stock",
     source: "manual",

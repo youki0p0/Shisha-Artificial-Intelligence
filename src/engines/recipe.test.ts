@@ -8,13 +8,13 @@ import { seedHeatTemplates } from "@/data/seed/heatTemplates";
 import { seedTroubleshootingRules } from "@/data/seed/troubleshooting";
 
 const inventoryIds = new Set([
-  "fm_deus_earlgrey",
-  "fm_adalya_pear",
-  "fm_alfakher_vanilla",
-  "fm_blackburn_coladragon",
-  "fm_serbetli_exoticlime",
-  "fm_alfakher_mint",
-  "fm_alfakher_greentea",
+  "fm_afzal_earl_grey",
+  "fm_dozaj_pear",
+  "fm_al_fakher_vanilla",
+  "fm_adalya_cola_dragon",
+  "fm_al_fakhamah_exotic_lime",
+  "fm_al_fakher_mint",
+  "fm_blackburn_green_tea",
 ]);
 
 function gen(input: string, mode: "inventory_only" | "allow_missing" | "beginner" | "advanced" = "inventory_only", totalGram = 15) {
@@ -88,7 +88,7 @@ describe("RecipeEngine", () => {
   it("cola request favors the cola flavor as a chosen item", () => {
     const { recipe } = gen("コーラドラゴンを活かした大人っぽいやつ", "inventory_only");
     expect(
-      recipe.items.some((i) => i.flavorMasterId === "fm_blackburn_coladragon"),
+      recipe.items.some((i) => i.flavorMasterId === "fm_adalya_cola_dragon"),
     ).toBe(true);
   });
 });

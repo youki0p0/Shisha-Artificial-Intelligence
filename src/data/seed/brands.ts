@@ -1,9 +1,15 @@
 import { Brand } from "@/domain/types";
+import { generatedBrands } from "./flavors.generated";
 
 const T = "2025-01-01T00:00:00.000Z";
 
-/** Curated brand master. LISSO acts as the initial curator. */
-export const seedBrands: Brand[] = [
+/**
+ * Curated brand master. LISSO acts as the initial curator.
+ * Exported so the CSV build step resolves against a STABLE set (never the merged
+ * list below — that would feed generated brands back in and erase them on the
+ * next regenerate).
+ */
+export const curatedBrands: Brand[] = [
   {
     id: "brand_alfakher",
     name: "Al Fakher",
@@ -67,4 +73,14 @@ export const seedBrands: Brand[] = [
     createdAt: T,
     updatedAt: T,
   },
+];
+
+/**
+ * Full brand master = curated brands + any brand the CSV introduced (deduped by
+ * id, curated entries win so their hand-written aliases/notes are preserved).
+ */
+const curatedIds = new Set(curatedBrands.map((b) => b.id));
+export const seedBrands: Brand[] = [
+  ...curatedBrands,
+  ...generatedBrands.filter((b) => !curatedIds.has(b.id)),
 ];

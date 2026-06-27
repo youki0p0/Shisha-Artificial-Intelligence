@@ -105,6 +105,17 @@ export function scoreFlavor(
   const tagMatch = fraction(flavor.tags, preferredTagSet);
   breakdown.tagMatch = round(tagMatch * 1.5);
 
+  // Identity match: how many of the *requested* identity roles/tags this flavor
+  // satisfies (recall over the request, NOT diluted by the flavor's own breadth
+  // the way fraction() is). This is what lets an explicitly named profile — e.g.
+  // "コーラドラゴンを活かした" → preferred role/tag "cola" — surface its flavor even
+  // when its raw taste vector sits away from the requested mood vector.
+  const flavorRoles = flavor.roles as string[];
+  const reqRoleHits = [...preferredRoleSet].filter((r) => flavorRoles.includes(r)).length;
+  const reqTagHits = [...preferredTagSet].filter((t) => flavor.tags.includes(t)).length;
+  const identityMatch = Math.min(1, (reqRoleHits + reqTagHits) / 3);
+  breakdown.identityBonus = round(identityMatch * 2.0);
+
   const inInventory = ctx.inventoryIds.has(flavor.id);
   breakdown.inventoryBonus = round((inInventory ? 1 : 0) * 2.0);
 

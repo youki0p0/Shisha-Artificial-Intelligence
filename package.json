@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx scripts/seed.ts",
+    "flavors:build": "tsx scripts/buildFlavorMaster.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
