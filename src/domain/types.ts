@@ -1,5 +1,5 @@
 /**
- * Shisha Flavor OS — Core domain types.
+ * ShishaOS — Core domain types.
  *
  * These types model the whole product:
  *  - Global master data (shared, read-only for normal users)

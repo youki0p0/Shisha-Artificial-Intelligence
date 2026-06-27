@@ -22,7 +22,7 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <div className="lisso-eyebrow mb-2">Flavor OS · Dashboard</div>
+          <div className="lisso-eyebrow mb-2">ShishaOS · Dashboard</div>
           <h1 className="text-2xl font-medium">ダッシュボード</h1>
           <p className="text-muted-foreground text-sm">
             在庫からあなただけのレシピを生成しましょう。

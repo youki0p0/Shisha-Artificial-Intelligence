@@ -4,7 +4,7 @@ import "./globals.css";
 import { getCurrentUser } from "@/lib/auth";
 
 export const metadata: Metadata = {
-  title: "LISSO Flavor OS",
+  title: "LISSO ShishaOS",
   description:
     "シーシャ（水たばこ）のフレーバー在庫管理とレシピ生成サービス。OCRとデータベース主導の設計。",
 };
@@ -48,7 +48,7 @@ export default async function RootLayout({
                 </span>
                 <span className="lisso-mark" aria-hidden="true" />
                 <span className="lisso-eyebrow ml-1.5 hidden sm:inline">
-                  Flavor OS
+                  ShishaOS
                 </span>
               </Link>
               <nav className="flex gap-0.5 flex-wrap text-sm">
