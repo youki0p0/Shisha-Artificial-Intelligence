@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, isLoggedIn } from "@/lib/auth";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 
 export const metadata: Metadata = {
   title: "LISSO ShishaOS",
@@ -24,6 +25,8 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const user = await getCurrentUser();
+  const supabaseMode = isSupabaseConfigured();
+  const loggedIn = supabaseMode ? await isLoggedIn() : false;
   return (
     <html lang="ja">
       <head>
@@ -62,9 +65,32 @@ export default async function RootLayout({
                   </Link>
                 ))}
               </nav>
-              <div className="ml-auto lisso-mono text-xs text-muted-foreground">
-                {user.displayName}
-                <span className="text-foreground/40"> · {user.role}</span>
+              <div className="ml-auto flex items-center gap-3 lisso-mono text-xs text-muted-foreground">
+                {supabaseMode && !loggedIn ? (
+                  <Link
+                    href="/login"
+                    className="rounded-sm bg-foreground text-background px-3 py-1.5 hover:opacity-90"
+                  >
+                    ログイン
+                  </Link>
+                ) : (
+                  <>
+                    <span>
+                      {user.displayName}
+                      <span className="text-foreground/40"> · {user.role}</span>
+                    </span>
+                    {supabaseMode && loggedIn && (
+                      <form action="/auth/signout" method="post">
+                        <button
+                          type="submit"
+                          className="text-muted-foreground/70 hover:text-foreground"
+                        >
+                          ログアウト
+                        </button>
+                      </form>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           </header>

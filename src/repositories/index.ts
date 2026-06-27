@@ -11,6 +11,8 @@ import {
 } from "@/domain/types";
 import { getDb, mutate } from "./jsonStore";
 import { Repositories } from "./types";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { supabaseRepositories } from "./supabase";
 
 function textHit(haystacks: string[], q: string): boolean {
   const nq = normalizeText(q);
@@ -18,7 +20,8 @@ function textHit(haystacks: string[], q: string): boolean {
   return haystacks.some((h) => normalizeText(h).includes(nq));
 }
 
-const repositories: Repositories = {
+/** JSON/seed-backed repositories (default dev mode + the master-data source). */
+export const jsonRepositories: Repositories = {
   brands: {
     async list() {
       return (await getDb()).brands;
@@ -229,9 +232,17 @@ const repositories: Repositories = {
   },
 };
 
-/** Single access point for all repositories. Swap implementation here later. */
+/**
+ * Single access point for all repositories.
+ *
+ * When Supabase is configured, per-user data (inventory, recipes, submissions,
+ * photo imports, profiles) is served from Postgres with RLS; master data still
+ * comes from the deterministic seed. Otherwise everything falls back to the
+ * in-memory JSON store (dev + tests).
+ */
 export function getRepositories(): Repositories {
-  return repositories;
+  if (isSupabaseConfigured()) return supabaseRepositories;
+  return jsonRepositories;
 }
 
 export type { Brand };
