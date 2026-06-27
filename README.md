@@ -1,4 +1,4 @@
-# Shisha Flavor OS
+# ShishaOS
 
 A public, multi-user **shisha / hookah flavor inventory and recipe generation**
 web service. It is **OCR-first and database-first**, not an AI chatbot.

@@ -1,8 +1,8 @@
 {
-  "name": "shisha-flavor-os",
+  "name": "shishaos",
   "version": "0.1.0",
   "private": true,
-  "description": "Shisha Flavor OS - a public, multi-user, OCR-first and DB-first shisha/hookah flavor inventory and recipe generation service.",
+  "description": "ShishaOS - a public, multi-user, OCR-first and DB-first shisha/hookah flavor inventory and recipe generation service.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
