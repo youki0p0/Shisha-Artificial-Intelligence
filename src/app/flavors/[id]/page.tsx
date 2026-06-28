@@ -96,6 +96,11 @@ export default async function FlavorDetailPage({
             <Badge variant={flavor.dataStatus === "verified" ? "success" : "muted"}>
               {flavor.dataStatus}
             </Badge>
+            {flavor.confidence != null && (
+              <Badge variant={flavor.confidence >= 0.7 ? "outline" : "warn"}>
+                信頼度 {Math.round(flavor.confidence * 100)}%
+              </Badge>
+            )}
             <form action={addManualInventoryAction}>
               <input type="hidden" name="flavorMasterId" value={flavor.id} />
               <input type="hidden" name="status" value="in_stock" />
@@ -152,6 +157,16 @@ export default async function FlavorDetailPage({
             </dl>
             {flavor.notes && (
               <p className="mt-4 text-sm text-muted-foreground border-t pt-3">{flavor.notes}</p>
+            )}
+            {flavor.sourceUrl && (
+              <a
+                href={flavor.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-block lisso-mono text-[11px] text-primary hover:underline break-all"
+              >
+                出典: {new URL(flavor.sourceUrl).hostname} ↗
+              </a>
             )}
           </CardContent>
         </Card>

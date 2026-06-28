@@ -99,6 +99,9 @@ export type FlavorProfile = {
   realism: Realism | null;
   expanded_role: string | null;
   notes: string | null;
+  /** Provenance: 0..1 confidence in the auto-enriched values, and source URL(s). */
+  confidence: number | null;
+  source_urls: string | null;
 };
 
 /** True when the row carries a full sensory profile (not just a queued stub). */
@@ -134,6 +137,8 @@ export const flavorProfileSchema = z.object({
   realism: enumOrNull(REALISM),
   expanded_role: z.string().nullable(),
   notes: z.string().nullable(),
+  confidence: z.number().nullable(),
+  source_urls: z.string().nullable(),
 });
 
 /** Concatenated free-text descriptor surface used by keyword rules. */

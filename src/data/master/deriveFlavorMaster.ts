@@ -163,6 +163,8 @@ export function deriveFlavorMaster(
     soloUsability: field(p, spec, "soloUsability"),
     description: p.memo ?? undefined,
     notes: p.notes ?? undefined,
+    confidence: p.confidence ?? undefined,
+    sourceUrl: p.source_urls?.split(/[\s,;]+/).find((u) => u.startsWith("http")) ?? undefined,
     // CSV is the curated LISSO master ⇒ verified when profiled, pending when stub.
     dataStatus: profiled ? "verified" : "pending",
     createdAt: timestamp,

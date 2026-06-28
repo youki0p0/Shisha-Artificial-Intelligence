@@ -164,6 +164,9 @@ export type FlavorMaster = {
   soloUsability: number;
   description?: string;
   notes?: string;
+  /** Provenance for auto-enriched values: confidence (0..1) and a source URL. */
+  confidence?: number;
+  sourceUrl?: string;
   dataStatus: FlavorDataStatus;
   createdAt: ISODateString;
   updatedAt: ISODateString;
