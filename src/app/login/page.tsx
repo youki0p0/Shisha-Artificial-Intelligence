@@ -6,6 +6,34 @@ import { getBrowserSupabase } from "@/lib/supabase/client";
 
 type Mode = "signin" | "signup" | "magic";
 
+/**
+ * Map common Supabase Auth errors to actionable Japanese guidance. The raw
+ * message is still shown (small) so config issues are diagnosable.
+ */
+function describeAuthError(err: unknown): string {
+  const raw = err instanceof Error ? err.message : String(err);
+  const m = raw.toLowerCase();
+  if (m.includes("rate limit") || m.includes("too many") || m.includes("429")) {
+    return "短時間に送りすぎです。数分おいてから再度お試しください。";
+  }
+  if (m.includes("redirect") && (m.includes("not allowed") || m.includes("invalid"))) {
+    return "リダイレクトURLが許可されていません。Supabase の Authentication → URL Configuration に、このサイトの /auth/callback を追加してください。";
+  }
+  if (m.includes("sending") || m.includes("smtp") || m.includes("email") && m.includes("error")) {
+    return "メールの送信に失敗しました。Supabase の Authentication → Email/SMTP 設定（カスタムSMTP）をご確認ください。";
+  }
+  if (m.includes("signups not allowed") || m.includes("signup is disabled")) {
+    return "新規登録が無効になっています。Supabase の Authentication → Providers でメール登録を有効にしてください。";
+  }
+  if (m.includes("invalid login credentials")) {
+    return "メールアドレスまたはパスワードが違います。";
+  }
+  if (m.includes("email not confirmed")) {
+    return "メールアドレスが未確認です。届いた確認リンクを開いてください。";
+  }
+  return `送信に失敗しました: ${raw}`;
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("signin");
@@ -46,7 +74,7 @@ export default function LoginPage() {
       router.push("/");
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "ログインに失敗しました。");
+      setError(describeAuthError(err));
     } finally {
       setBusy(false);
     }
