@@ -14,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
   Label,
+  PageHeader,
   Select,
   Textarea,
 } from "@/components/ui/primitives";
@@ -79,12 +80,11 @@ export default function RecipeGeneratorPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">レシピ生成</h1>
-        <p className="text-sm text-muted-foreground">
-          日本語のリクエストをローカル解析して、在庫からレシピを生成します（通常はAI不使用）。
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Mixology"
+        title="レシピ生成"
+        description="日本語のリクエストをローカル解析して、在庫からレシピを生成します（通常はAI不使用）。"
+      />
 
       <Card>
         <CardHeader>

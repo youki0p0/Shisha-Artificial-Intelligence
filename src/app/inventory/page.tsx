@@ -13,8 +13,10 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  EmptyState,
   Input,
   Label,
+  PageHeader,
   Select,
 } from "@/components/ui/primitives";
 
@@ -38,12 +40,16 @@ export default async function InventoryPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <h1 className="text-2xl font-bold">マイ在庫</h1>
-        <Link href="/photo-import">
-          <Button variant="outline">写真から取込</Button>
-        </Link>
-      </div>
+      <PageHeader
+        eyebrow="Inventory"
+        title="マイ在庫"
+        description="手持ちのフレーバーを登録すると、在庫内だけでMIXを設計できます。"
+        actions={
+          <Link href="/photo-import">
+            <Button variant="outline">写真から取込</Button>
+          </Link>
+        }
+      />
 
       <Card>
         <CardHeader>
@@ -108,7 +114,10 @@ export default async function InventoryPage() {
         </CardHeader>
         <CardContent className="space-y-2">
           {inventory.length === 0 && (
-            <p className="text-sm text-muted-foreground">在庫がありません。</p>
+            <EmptyState
+              title="在庫がありません"
+              description="上のフォーム、または写真取込から追加してください。"
+            />
           )}
           {inventory.map((item) => {
             const fm = item.flavorMasterId ? flavorById.get(item.flavorMasterId) : undefined;
@@ -118,7 +127,7 @@ export default async function InventoryPage() {
             return (
               <div
                 key={item.id}
-                className="flex items-center justify-between gap-2 border rounded-md px-3 py-2 flex-wrap"
+                className="flex items-center justify-between gap-2 border rounded-md px-3 py-2 flex-wrap lisso-card-hover"
               >
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">{name}</span>

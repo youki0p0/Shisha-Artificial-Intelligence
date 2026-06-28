@@ -101,4 +101,31 @@
     background: linear-gradient(140deg, #8aa8cc 0%, #3c6592 46%, #1b3450 100%);
     transform: rotate(45deg);
   }
+
+  /* A quiet elevated panel for hero / feature blocks. */
+  .lisso-panel {
+    background:
+      radial-gradient(120% 140% at 100% 0%, hsl(var(--primary) / 0.14), transparent 55%),
+      radial-gradient(110% 120% at 0% 100%, hsl(126 16% 45% / 0.12), transparent 55%),
+      hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+  }
+
+  /* Cards lift slightly on hover for interactive lists. */
+  .lisso-card-hover {
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+  }
+  .lisso-card-hover:hover {
+    border-color: hsl(var(--foreground) / 0.18);
+    background-color: hsl(var(--card) / 0.7);
+  }
+}
+
+@layer utilities {
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.001ms !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
 }

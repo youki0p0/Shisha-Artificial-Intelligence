@@ -8,7 +8,9 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  EmptyState,
   Input,
+  PageHeader,
 } from "@/components/ui/primitives";
 
 const PAGE_SIZE = 48;
@@ -44,12 +46,11 @@ export default async function FlavorsPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">フレーバーマスター検索</h1>
-        <p className="text-sm text-muted-foreground">
-          ブランド・フレーバー名・タグで検索。味プロファイルを確認して在庫に追加できます。
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Flavor Master"
+        title="フレーバー検索"
+        description="ブランド・フレーバー名・タグで検索。味プロファイルを確認して在庫に追加できます。"
+      />
 
       <form className="flex gap-2" method="get">
         <Input name="q" defaultValue={q ?? ""} placeholder="例: tea / コーラ / Al Fakher" />
@@ -63,7 +64,7 @@ export default async function FlavorsPage({
 
       <div className="grid gap-4 md:grid-cols-2">
         {flavors.map((f) => (
-          <Card key={f.id}>
+          <Card key={f.id} className="lisso-card-hover">
             <CardHeader>
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <CardTitle>
@@ -99,10 +100,14 @@ export default async function FlavorsPage({
             </CardContent>
           </Card>
         ))}
-        {flavors.length === 0 && (
-          <p className="text-sm text-muted-foreground">該当なし。</p>
-        )}
       </div>
+
+      {flavors.length === 0 && (
+        <EmptyState
+          title="該当するフレーバーがありません"
+          description={q ? `「${q}」に一致する項目は見つかりませんでした。` : undefined}
+        />
+      )}
 
       {totalPages > 1 && (
         <nav className="flex items-center justify-between gap-2 pt-2">

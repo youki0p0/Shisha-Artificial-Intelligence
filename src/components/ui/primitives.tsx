@@ -135,5 +135,80 @@ export const Select = React.forwardRef<
 Select.displayName = "Select";
 
 export function Label({ className, ...props }: React.LabelHTMLAttributes<HTMLLabelElement>) {
-  return <label className={cn("text-sm font-medium", className)} {...props} />;
+  return (
+    <label
+      className={cn("mb-1 block text-xs font-medium text-muted-foreground", className)}
+      {...props}
+    />
+  );
+}
+
+/** Consistent page header: mono eyebrow + serif title + optional description + actions. */
+export function PageHeader({
+  eyebrow,
+  title,
+  description,
+  actions,
+}: {
+  eyebrow?: string;
+  title: React.ReactNode;
+  description?: React.ReactNode;
+  actions?: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-wrap items-end justify-between gap-3 border-b pb-5">
+      <div className="space-y-1">
+        {eyebrow && <div className="lisso-eyebrow">{eyebrow}</div>}
+        <h1 className="text-2xl sm:text-3xl font-medium">{title}</h1>
+        {description && (
+          <p className="text-sm text-muted-foreground max-w-2xl">{description}</p>
+        )}
+      </div>
+      {actions && <div className="flex items-center gap-2">{actions}</div>}
+    </div>
+  );
+}
+
+/** A quiet placeholder for empty lists. */
+export function EmptyState({
+  title,
+  description,
+  action,
+}: {
+  title: string;
+  description?: React.ReactNode;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-md border border-dashed bg-card/30 px-6 py-10 text-center">
+      <p className="text-sm font-medium text-foreground">{title}</p>
+      {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
+      {action && <div className="mt-4 flex justify-center">{action}</div>}
+    </div>
+  );
+}
+
+/** A single KPI card. */
+export function Stat({
+  label,
+  value,
+  sub,
+  accent,
+}: {
+  label: string;
+  value: React.ReactNode;
+  sub?: React.ReactNode;
+  accent?: boolean;
+}) {
+  return (
+    <Card className={cn(accent && "border-olive-500/40")}>
+      <CardContent className="py-4">
+        <div className="lisso-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+          {label}
+        </div>
+        <div className="font-display text-3xl font-medium mt-1.5 tabular-nums">{value}</div>
+        {sub && <div className="lisso-mono text-[11px] text-muted-foreground mt-1">{sub}</div>}
+      </CardContent>
+    </Card>
+  );
 }
