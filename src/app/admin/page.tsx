@@ -268,6 +268,14 @@ export default async function AdminPage({
                                 <td className="py-1 text-right font-medium tabular-nums">
                                   {p.pay !== undefined ? formatYen(p.pay) : "—"}
                                 </td>
+                                <td className="py-1 text-right">
+                                  <Link
+                                    href={`/payslip/${u.id}/${p.month}`}
+                                    className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                                  >
+                                    明細
+                                  </Link>
+                                </td>
                               </tr>
                             ))}
                           </tbody>
