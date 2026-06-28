@@ -8,12 +8,14 @@
  */
 import {
   Brand,
+  CurationNote,
   FlavorMaster,
   HeatTemplate,
   MasterSubmission,
   PhotoDetectedItem,
   PhotoImportSession,
   Recipe,
+  ShiftEntry,
   SynergyRule,
   TasteWord,
   TroubleshootingRule,
@@ -54,6 +56,11 @@ export interface TroubleshootingRepository {
 export interface UserRepository {
   getById(id: string): Promise<UserProfile | undefined>;
   list(): Promise<UserProfile[]>;
+  /** Admin-only: update display name / role / wage schedule. */
+  update(
+    id: string,
+    patch: Partial<UserProfile>,
+  ): Promise<UserProfile | undefined>;
 }
 
 export interface InventoryRepository {
@@ -100,6 +107,24 @@ export interface PhotoImportRepository {
   ): Promise<PhotoDetectedItem | undefined>;
 }
 
+export interface ShiftRepository {
+  listByUser(userId: string): Promise<ShiftEntry[]>;
+  create(shift: ShiftEntry): Promise<ShiftEntry>;
+  remove(id: string): Promise<void>;
+}
+
+export interface CurationNoteRepository {
+  /** All notes (for an AI pass to scan); newest first. */
+  list(): Promise<CurationNote[]>;
+  listByFlavor(flavorMasterId: string): Promise<CurationNote[]>;
+  create(note: CurationNote): Promise<CurationNote>;
+  update(
+    id: string,
+    patch: Partial<CurationNote>,
+  ): Promise<CurationNote | undefined>;
+  remove(id: string): Promise<void>;
+}
+
 export interface Repositories {
   brands: BrandRepository;
   flavors: FlavorRepository;
@@ -112,4 +137,6 @@ export interface Repositories {
   recipes: RecipeRepository;
   masterSubmissions: MasterSubmissionRepository;
   photoImport: PhotoImportRepository;
+  curationNotes: CurationNoteRepository;
+  shifts: ShiftRepository;
 }

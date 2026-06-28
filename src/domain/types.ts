@@ -254,11 +254,42 @@ export type PublicRecipeTemplate = {
 
 export type UserRole = "user" | "curator" | "admin";
 
+/**
+ * One effective-dated hourly wage (JPY/hour). `effectiveFrom` is a month key
+ * "YYYY-MM"; the wage in effect for any month is the entry with the greatest
+ * `effectiveFrom` that is <= that month. Admin-managed staff payroll data.
+ */
+export type WageEntry = {
+  id: string;
+  effectiveFrom: string; // "YYYY-MM"
+  hourlyWage: number; // JPY per hour
+};
+
 export type UserProfile = {
   id: string;
   displayName: string;
   handle?: string;
   role: UserRole;
+  /** Staff hourly-wage schedule (admin only). Newest effective month wins. */
+  wages?: WageEntry[];
+  createdAt: ISODateString;
+  updatedAt: ISODateString;
+};
+
+/**
+ * One staff work shift (timecard row). Hours are derived from start/end minus
+ * break, but stored so a manual override (or odd rounding) is preserved.
+ * Admin-managed; combined with the wage schedule to compute monthly pay.
+ */
+export type ShiftEntry = {
+  id: string;
+  userId: string;
+  date: string; // "YYYY-MM-DD"
+  start: string; // "HH:MM"
+  end: string; // "HH:MM"
+  breakMinutes?: number;
+  hours: number; // worked hours (decimal)
+  note?: string;
   createdAt: ISODateString;
   updatedAt: ISODateString;
 };
@@ -344,6 +375,25 @@ export type PhotoDetectedItem = {
   matchedFlavorMasterId?: string;
   matchConfidence: number;
   status: PhotoDetectedItemStatus;
+  createdAt: ISODateString;
+  updatedAt: ISODateString;
+};
+
+/**
+ * Internal curation note on a flavor's parameters. Staff-only — never shown to
+ * end users. Lets a curator (or a later AI pass) flag "this value looks wrong"
+ * and track whether it has been addressed.
+ */
+export type CurationNoteStatus = "open" | "resolved";
+
+export type CurationNote = {
+  id: string;
+  flavorMasterId: string;
+  note: string;
+  /** Which parameter/field the note is about (free text, e.g. "nose_finish"). */
+  field?: string;
+  status: CurationNoteStatus;
+  authorId: string;
   createdAt: ISODateString;
   updatedAt: ISODateString;
 };

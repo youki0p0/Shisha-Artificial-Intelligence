@@ -1,12 +1,14 @@
 /** Aggregated seed data + the full DB shape used by the JSON repository layer. */
 import {
   Brand,
+  CurationNote,
   FlavorMaster,
   HeatTemplate,
   MasterSubmission,
   PhotoDetectedItem,
   PhotoImportSession,
   Recipe,
+  ShiftEntry,
   SynergyRule,
   TasteWord,
   TroubleshootingRule,
@@ -19,7 +21,7 @@ import { seedTasteWords } from "./tasteWords";
 import { seedSynergyRules } from "./synergy";
 import { seedHeatTemplates } from "./heatTemplates";
 import { seedTroubleshootingRules } from "./troubleshooting";
-import { seedInventory, seedUsers } from "./users";
+import { seedInventory, seedShifts, seedUsers } from "./users";
 
 export type Database = {
   brands: Brand[];
@@ -34,6 +36,8 @@ export type Database = {
   masterSubmissions: MasterSubmission[];
   photoSessions: PhotoImportSession[];
   photoDetectedItems: PhotoDetectedItem[];
+  curationNotes: CurationNote[];
+  shifts: ShiftEntry[];
 };
 
 /** Build a fresh seeded database (deep-cloned so callers can mutate safely). */
@@ -51,6 +55,8 @@ export function buildSeedDatabase(): Database {
     masterSubmissions: [],
     photoSessions: [],
     photoDetectedItems: [],
+    curationNotes: [],
+    shifts: seedShifts,
   });
 }
 
@@ -63,4 +69,5 @@ export {
   seedTroubleshootingRules,
   seedUsers,
   seedInventory,
+  seedShifts,
 };

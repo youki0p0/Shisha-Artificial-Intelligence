@@ -12,10 +12,12 @@
  * types in src/domain/types.ts remain the single source of truth.
  */
 import {
+  CurationNote,
   MasterSubmission,
   PhotoDetectedItem,
   PhotoImportSession,
   Recipe,
+  ShiftEntry,
   UserInventoryItem,
   UserProfile,
 } from "@/domain/types";
@@ -60,6 +62,19 @@ export const supabaseRepositories: Repositories = {
       const sb = await getServerSupabase();
       const { data } = await sb.from("profiles").select("*");
       return (data ?? []).map(rowToProfile);
+    },
+    async update(id, patch) {
+      const sb = await getServerSupabase();
+      const existing = await this.getById(id);
+      if (!existing) return undefined;
+      const updated: UserProfile = { ...existing, ...patch, updatedAt: now() };
+      const row: Record<string, unknown> = { updated_at: updated.updatedAt };
+      if (patch.displayName !== undefined) row.display_name = updated.displayName;
+      if (patch.handle !== undefined) row.handle = updated.handle ?? null;
+      if (patch.role !== undefined) row.role = updated.role;
+      if (patch.wages !== undefined) row.wages = updated.wages ?? [];
+      await sb.from("profiles").update(row).eq("id", id);
+      return updated;
     },
   },
 
@@ -185,6 +200,86 @@ export const supabaseRepositories: Repositories = {
     },
   },
 
+  curationNotes: {
+    async list() {
+      const sb = await getServerSupabase();
+      const { data } = await sb
+        .from("flavor_curation_notes")
+        .select("data")
+        .order("created_at", { ascending: false });
+      return (data ?? []).map((r) => r.data as CurationNote);
+    },
+    async listByFlavor(flavorMasterId) {
+      const sb = await getServerSupabase();
+      const { data } = await sb
+        .from("flavor_curation_notes")
+        .select("data")
+        .eq("flavor_master_id", flavorMasterId)
+        .order("created_at", { ascending: false });
+      return (data ?? []).map((r) => r.data as CurationNote);
+    },
+    async create(note) {
+      const sb = await getServerSupabase();
+      await sb.from("flavor_curation_notes").insert({
+        id: note.id,
+        flavor_master_id: note.flavorMasterId,
+        status: note.status,
+        author_id: note.authorId,
+        data: note,
+      });
+      return note;
+    },
+    async update(id, patch) {
+      const sb = await getServerSupabase();
+      const { data: row } = await sb
+        .from("flavor_curation_notes")
+        .select("data")
+        .eq("id", id)
+        .maybeSingle();
+      if (!row) return undefined;
+      const updated: CurationNote = {
+        ...(row.data as CurationNote),
+        ...patch,
+        updatedAt: now(),
+      };
+      await sb
+        .from("flavor_curation_notes")
+        .update({ status: updated.status, data: updated, updated_at: updated.updatedAt })
+        .eq("id", id);
+      return updated;
+    },
+    async remove(id) {
+      const sb = await getServerSupabase();
+      await sb.from("flavor_curation_notes").delete().eq("id", id);
+    },
+  },
+
+  shifts: {
+    async listByUser(userId) {
+      const sb = await getServerSupabase();
+      const { data } = await sb
+        .from("staff_shifts")
+        .select("data")
+        .eq("user_id", userId)
+        .order("date", { ascending: false });
+      return (data ?? []).map((r) => r.data as ShiftEntry);
+    },
+    async create(shift) {
+      const sb = await getServerSupabase();
+      await sb.from("staff_shifts").insert({
+        id: shift.id,
+        user_id: shift.userId,
+        date: shift.date,
+        data: shift,
+      });
+      return shift;
+    },
+    async remove(id) {
+      const sb = await getServerSupabase();
+      await sb.from("staff_shifts").delete().eq("id", id);
+    },
+  },
+
   photoImport: {
     async listSessionsByUser(userId) {
       const sb = await getServerSupabase();
@@ -275,6 +370,7 @@ type ProfileRow = {
   display_name: string;
   handle: string | null;
   role: string;
+  wages: UserProfile["wages"] | null;
   created_at: string;
   updated_at: string;
 };
@@ -285,6 +381,7 @@ function rowToProfile(row: ProfileRow): UserProfile {
     displayName: row.display_name,
     handle: row.handle ?? undefined,
     role: (row.role as UserProfile["role"]) ?? "user",
+    wages: row.wages ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

@@ -1,4 +1,5 @@
 import {
+  ShiftEntry,
   UserInventoryItem,
   UserProfile,
 } from "@/domain/types";
@@ -35,7 +36,45 @@ export const seedUsers: UserProfile[] = [
     createdAt: T,
     updatedAt: T,
   },
+  {
+    // Staff member. Login handle "0129ryuusei", display name set to "さおとめ".
+    // Hourly wage: ¥1,200 through June 2026, ¥1,250 from July 2026.
+    id: "user_0129ryuusei",
+    displayName: "さおとめ",
+    handle: "0129ryuusei",
+    role: "user",
+    wages: [
+      { id: "wage_0129ryuusei_base", effectiveFrom: "2025-01", hourlyWage: 1200 },
+      { id: "wage_0129ryuusei_jul26", effectiveFrom: "2026-07", hourlyWage: 1250 },
+    ],
+    createdAt: T,
+    updatedAt: T,
+  },
 ];
+
+/**
+ * さおとめ (@0129ryuusei) の2026年6月勤務記録。合計52時間。
+ * 6月の時給は ¥1,200 なので給与は 52 × 1,200 = ¥62,400。
+ */
+export const seedShifts: ShiftEntry[] = [
+  ["2026-06-06", "13:00", "21:00", 8],
+  ["2026-06-13", "16:00", "21:00", 5],
+  ["2026-06-14", "13:00", "21:00", 8],
+  ["2026-06-20", "13:00", "21:00", 8],
+  ["2026-06-21", "13:00", "21:00", 8],
+  ["2026-06-27", "13:00", "20:00", 7],
+  ["2026-06-28", "13:00", "21:00", 8],
+].map(([date, start, end, hours]) => ({
+  id: `shift_0129ryuusei_${String(date).replace(/-/g, "")}`,
+  userId: "user_0129ryuusei",
+  date: date as string,
+  start: start as string,
+  end: end as string,
+  breakMinutes: 0,
+  hours: hours as number,
+  createdAt: T,
+  updatedAt: T,
+}));
 
 /** Starter inventory for the demo user so recipe generation works out of the box. */
 export const seedInventory: UserInventoryItem[] = [

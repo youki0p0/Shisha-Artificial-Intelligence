@@ -102,6 +102,18 @@ export const jsonRepositories: Repositories = {
     async list() {
       return (await getDb()).users;
     },
+    async update(id, patch) {
+      return mutate((db) => {
+        const idx = db.users.findIndex((u) => u.id === id);
+        if (idx === -1) return undefined;
+        db.users[idx] = {
+          ...db.users[idx],
+          ...patch,
+          updatedAt: new Date().toISOString(),
+        };
+        return db.users[idx];
+      });
+    },
   },
 
   inventory: {
@@ -177,6 +189,61 @@ export const jsonRepositories: Repositories = {
           updatedAt: new Date().toISOString(),
         };
         return db.masterSubmissions[idx];
+      });
+    },
+  },
+
+  curationNotes: {
+    async list() {
+      return [...(await getDb()).curationNotes].sort((a, b) =>
+        b.createdAt.localeCompare(a.createdAt),
+      );
+    },
+    async listByFlavor(flavorMasterId) {
+      return (await getDb()).curationNotes
+        .filter((n) => n.flavorMasterId === flavorMasterId)
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    },
+    async create(note) {
+      return mutate((db) => {
+        db.curationNotes.push(note);
+        return note;
+      });
+    },
+    async update(id, patch) {
+      return mutate((db) => {
+        const idx = db.curationNotes.findIndex((n) => n.id === id);
+        if (idx === -1) return undefined;
+        db.curationNotes[idx] = {
+          ...db.curationNotes[idx],
+          ...patch,
+          updatedAt: new Date().toISOString(),
+        };
+        return db.curationNotes[idx];
+      });
+    },
+    async remove(id) {
+      await mutate((db) => {
+        db.curationNotes = db.curationNotes.filter((n) => n.id !== id);
+      });
+    },
+  },
+
+  shifts: {
+    async listByUser(userId) {
+      return (await getDb()).shifts
+        .filter((s) => s.userId === userId)
+        .sort((a, b) => b.date.localeCompare(a.date));
+    },
+    async create(shift) {
+      return mutate((db) => {
+        db.shifts.push(shift);
+        return shift;
+      });
+    },
+    async remove(id) {
+      await mutate((db) => {
+        db.shifts = db.shifts.filter((s) => s.id !== id);
       });
     },
   },
