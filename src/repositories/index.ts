@@ -102,6 +102,18 @@ export const jsonRepositories: Repositories = {
     async list() {
       return (await getDb()).users;
     },
+    async update(id, patch) {
+      return mutate((db) => {
+        const idx = db.users.findIndex((u) => u.id === id);
+        if (idx === -1) return undefined;
+        db.users[idx] = {
+          ...db.users[idx],
+          ...patch,
+          updatedAt: new Date().toISOString(),
+        };
+        return db.users[idx];
+      });
+    },
   },
 
   inventory: {

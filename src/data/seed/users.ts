@@ -35,6 +35,20 @@ export const seedUsers: UserProfile[] = [
     createdAt: T,
     updatedAt: T,
   },
+  {
+    // Staff member. Login handle "0129ryuusei", display name set to "さおとめ".
+    // Hourly wage: ¥1,200 through June 2026, ¥1,250 from July 2026.
+    id: "user_0129ryuusei",
+    displayName: "さおとめ",
+    handle: "0129ryuusei",
+    role: "user",
+    wages: [
+      { id: "wage_0129ryuusei_base", effectiveFrom: "2025-01", hourlyWage: 1200 },
+      { id: "wage_0129ryuusei_jul26", effectiveFrom: "2026-07", hourlyWage: 1250 },
+    ],
+    createdAt: T,
+    updatedAt: T,
+  },
 ];
 
 /** Starter inventory for the demo user so recipe generation works out of the box. */

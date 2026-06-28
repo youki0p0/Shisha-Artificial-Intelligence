@@ -55,6 +55,11 @@ export interface TroubleshootingRepository {
 export interface UserRepository {
   getById(id: string): Promise<UserProfile | undefined>;
   list(): Promise<UserProfile[]>;
+  /** Admin-only: update display name / role / wage schedule. */
+  update(
+    id: string,
+    patch: Partial<UserProfile>,
+  ): Promise<UserProfile | undefined>;
 }
 
 export interface InventoryRepository {

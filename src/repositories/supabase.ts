@@ -62,6 +62,19 @@ export const supabaseRepositories: Repositories = {
       const { data } = await sb.from("profiles").select("*");
       return (data ?? []).map(rowToProfile);
     },
+    async update(id, patch) {
+      const sb = await getServerSupabase();
+      const existing = await this.getById(id);
+      if (!existing) return undefined;
+      const updated: UserProfile = { ...existing, ...patch, updatedAt: now() };
+      const row: Record<string, unknown> = { updated_at: updated.updatedAt };
+      if (patch.displayName !== undefined) row.display_name = updated.displayName;
+      if (patch.handle !== undefined) row.handle = updated.handle ?? null;
+      if (patch.role !== undefined) row.role = updated.role;
+      if (patch.wages !== undefined) row.wages = updated.wages ?? [];
+      await sb.from("profiles").update(row).eq("id", id);
+      return updated;
+    },
   },
 
   inventory: {
@@ -330,6 +343,7 @@ type ProfileRow = {
   display_name: string;
   handle: string | null;
   role: string;
+  wages: UserProfile["wages"] | null;
   created_at: string;
   updated_at: string;
 };
@@ -340,6 +354,7 @@ function rowToProfile(row: ProfileRow): UserProfile {
     displayName: row.display_name,
     handle: row.handle ?? undefined,
     role: (row.role as UserProfile["role"]) ?? "user",
+    wages: row.wages ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

@@ -17,8 +17,15 @@ import {
   UserInventoryItem,
 } from "@/domain/types";
 import { getRepositories } from "@/repositories";
-import { getCurrentUser, getCurrentUserId, isCuratorOrAdmin } from "@/lib/auth";
+import {
+  getCurrentUser,
+  getCurrentUserId,
+  isAdmin,
+  isCuratorOrAdmin,
+} from "@/lib/auth";
 import { newId, nowIso } from "@/lib/ids";
+import { isMonthKey } from "@/lib/wages";
+import { WageEntry } from "@/domain/types";
 import { getOcrAdapter } from "@/adapters/ocr";
 import { matchText } from "@/engines/matcher";
 
@@ -302,5 +309,67 @@ export async function deleteCurationNoteAction(formData: FormData) {
   const user = await getCurrentUser();
   if (!isCuratorOrAdmin(user)) throw new Error("forbidden");
   await repos.curationNotes.remove(String(formData.get("id") ?? ""));
+  revalidatePath("/admin");
+}
+
+// --- User management + staff wages (admin only) -----------------------------
+
+/** Rename a user's display name (e.g. handle "0129ryuusei" -> "さおとめ"). */
+export async function renameUserAction(formData: FormData) {
+  const repos = getRepositories();
+  const actor = await getCurrentUser();
+  if (!isAdmin(actor)) throw new Error("forbidden");
+
+  const id = String(formData.get("id") ?? "").trim();
+  const displayName = String(formData.get("displayName") ?? "").trim();
+  if (!id || !displayName) return;
+
+  await repos.users.update(id, { displayName });
+  revalidatePath("/admin");
+}
+
+/** Add (or replace) an effective-dated hourly wage for a staff member. */
+export async function addWageEntryAction(formData: FormData) {
+  const repos = getRepositories();
+  const actor = await getCurrentUser();
+  if (!isAdmin(actor)) throw new Error("forbidden");
+
+  const userId = String(formData.get("userId") ?? "").trim();
+  const effectiveFrom = String(formData.get("effectiveFrom") ?? "").trim();
+  const hourlyWage = Number(formData.get("hourlyWage"));
+  if (!userId || !isMonthKey(effectiveFrom)) return;
+  if (!Number.isFinite(hourlyWage) || hourlyWage < 0) return;
+
+  const target = await repos.users.getById(userId);
+  if (!target) return;
+
+  // One entry per effective month: replace if the month already exists.
+  const others = (target.wages ?? []).filter(
+    (w) => w.effectiveFrom !== effectiveFrom,
+  );
+  const entry: WageEntry = {
+    id: newId("wage"),
+    effectiveFrom,
+    hourlyWage: Math.round(hourlyWage),
+  };
+  await repos.users.update(userId, { wages: [...others, entry] });
+  revalidatePath("/admin");
+}
+
+/** Remove one wage entry from a staff member's schedule. */
+export async function deleteWageEntryAction(formData: FormData) {
+  const repos = getRepositories();
+  const actor = await getCurrentUser();
+  if (!isAdmin(actor)) throw new Error("forbidden");
+
+  const userId = String(formData.get("userId") ?? "").trim();
+  const wageId = String(formData.get("wageId") ?? "").trim();
+  if (!userId || !wageId) return;
+
+  const target = await repos.users.getById(userId);
+  if (!target) return;
+  await repos.users.update(userId, {
+    wages: (target.wages ?? []).filter((w) => w.id !== wageId),
+  });
   revalidatePath("/admin");
 }

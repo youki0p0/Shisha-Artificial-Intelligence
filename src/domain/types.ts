@@ -254,11 +254,24 @@ export type PublicRecipeTemplate = {
 
 export type UserRole = "user" | "curator" | "admin";
 
+/**
+ * One effective-dated hourly wage (JPY/hour). `effectiveFrom` is a month key
+ * "YYYY-MM"; the wage in effect for any month is the entry with the greatest
+ * `effectiveFrom` that is <= that month. Admin-managed staff payroll data.
+ */
+export type WageEntry = {
+  id: string;
+  effectiveFrom: string; // "YYYY-MM"
+  hourlyWage: number; // JPY per hour
+};
+
 export type UserProfile = {
   id: string;
   displayName: string;
   handle?: string;
   role: UserRole;
+  /** Staff hourly-wage schedule (admin only). Newest effective month wins. */
+  wages?: WageEntry[];
   createdAt: ISODateString;
   updatedAt: ISODateString;
 };

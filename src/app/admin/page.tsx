@@ -1,13 +1,23 @@
 import Link from "next/link";
 import { getRepositories } from "@/repositories";
-import { getCurrentUser, isCuratorOrAdmin } from "@/lib/auth";
+import { getCurrentUser, isAdmin, isCuratorOrAdmin } from "@/lib/auth";
 import {
   addCurationNoteAction,
+  addWageEntryAction,
   approveSubmissionAction,
   deleteCurationNoteAction,
+  deleteWageEntryAction,
   rejectSubmissionAction,
+  renameUserAction,
   toggleCurationNoteAction,
 } from "@/app/actions";
+import {
+  currentMonth,
+  currentWage,
+  formatMonth,
+  formatYen,
+  sortWages,
+} from "@/lib/wages";
 import {
   Badge,
   Button,
@@ -67,7 +77,7 @@ export default async function AdminPage({
   const { fq, fid } = await searchParams;
   const user = await getCurrentUser();
   const repos = getRepositories();
-  const [brands, flavors, tasteWords, synergy, heat, submissions, allNotes] =
+  const [brands, flavors, tasteWords, synergy, heat, submissions, allNotes, users] =
     await Promise.all([
       repos.brands.list(),
       repos.flavors.list(),
@@ -76,6 +86,7 @@ export default async function AdminPage({
       repos.heatTemplates.list(),
       repos.masterSubmissions.list(),
       repos.curationNotes.list(),
+      repos.users.list(),
     ]);
 
   if (!isCuratorOrAdmin(user)) {
@@ -117,6 +128,113 @@ export default async function AdminPage({
         title="管理 / キュレーター"
         description="マスターデータの確認と、ユーザーからの登録申請レビュー。"
       />
+
+      {isAdmin(user) && (
+        <Card>
+          <CardHeader>
+            <CardTitle>ユーザー管理 / スタッフ時給（管理者専用）</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-xs text-muted-foreground">
+              氏名の変更と、スタッフの時給を「何月から」で設定できます。各月の時給は、その月以前で最も新しい設定が適用されます（例: 6月まで ¥1,200・7月から ¥1,250）。
+            </p>
+            <div className="space-y-3">
+              {users.map((u) => {
+                const wages = sortWages(u.wages ?? []);
+                const eff = currentWage(u.wages);
+                return (
+                  <div key={u.id} className="rounded-md border p-3 space-y-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-medium">{u.displayName}</span>
+                      {u.handle && (
+                        <span className="lisso-mono text-[11px] text-muted-foreground">
+                          @{u.handle}
+                        </span>
+                      )}
+                      <Badge variant={u.role === "admin" ? "success" : "muted"}>
+                        {u.role}
+                      </Badge>
+                      <span className="ml-auto text-sm">
+                        今月の時給:{" "}
+                        {eff !== undefined ? (
+                          <span className="font-medium">{formatYen(eff)}</span>
+                        ) : (
+                          <span className="text-muted-foreground">未設定</span>
+                        )}
+                      </span>
+                    </div>
+
+                    {/* Rename */}
+                    <form action={renameUserAction} className="flex flex-wrap items-end gap-2">
+                      <input type="hidden" name="id" value={u.id} />
+                      <div className="flex-1 min-w-[180px]">
+                        <Label>表示名</Label>
+                        <Input name="displayName" defaultValue={u.displayName} />
+                      </div>
+                      <Button size="sm" variant="outline" type="submit">
+                        氏名を保存
+                      </Button>
+                    </form>
+
+                    {/* Wage schedule */}
+                    <div className="space-y-1.5">
+                      <div className="lisso-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                        時給スケジュール
+                      </div>
+                      {wages.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">未設定です。</p>
+                      ) : (
+                        <ul className="text-sm space-y-1">
+                          {wages.map((w) => (
+                            <li key={w.id} className="flex items-center gap-2">
+                              <span className="lisso-mono text-muted-foreground w-28">
+                                {formatMonth(w.effectiveFrom)}〜
+                              </span>
+                              <span className="font-medium">{formatYen(w.hourlyWage)}</span>
+                              <form action={deleteWageEntryAction} className="ml-auto">
+                                <input type="hidden" name="userId" value={u.id} />
+                                <input type="hidden" name="wageId" value={w.id} />
+                                <Button size="sm" variant="ghost" type="submit">
+                                  削除
+                                </Button>
+                              </form>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+
+                    {/* Add wage */}
+                    <form
+                      action={addWageEntryAction}
+                      className="flex flex-wrap items-end gap-2 border-t pt-3"
+                    >
+                      <input type="hidden" name="userId" value={u.id} />
+                      <div>
+                        <Label>適用開始月</Label>
+                        <Input type="month" name="effectiveFrom" defaultValue={currentMonth()} />
+                      </div>
+                      <div>
+                        <Label>時給（円）</Label>
+                        <Input
+                          type="number"
+                          name="hourlyWage"
+                          min={0}
+                          step={10}
+                          placeholder="1250"
+                        />
+                      </div>
+                      <Button size="sm" type="submit">
+                        時給を追加
+                      </Button>
+                    </form>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

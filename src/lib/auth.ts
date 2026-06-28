@@ -85,6 +85,11 @@ export function isCuratorOrAdmin(user: UserProfile): boolean {
   return user.role === "curator" || user.role === "admin";
 }
 
+/** Admin-only (e.g. user management + payroll). Curators are excluded. */
+export function isAdmin(user: UserProfile): boolean {
+  return user.role === "admin";
+}
+
 function anonProfile(): UserProfile {
   const now = new Date().toISOString();
   return {
