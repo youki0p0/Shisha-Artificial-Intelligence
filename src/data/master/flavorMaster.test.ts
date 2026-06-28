@@ -90,6 +90,21 @@ describe("flavor master CSV (the core ShishaOS DB)", () => {
   });
 });
 
+describe("brand normalization + alias tolerance", () => {
+  it("collapses spelling variants and keeps them as searchable aliases", () => {
+    // Every flavor's brand resolves, and brands carry no duplicate canonical names.
+    const byName = new Map(seedBrands.map((b) => [b.name.toLowerCase(), b]));
+    // Adalya absorbed ADALYA / adayla — the variants live on as aliases.
+    const adalya = byName.get("adalya");
+    expect(adalya).toBeDefined();
+    const aliasNorms = adalya!.aliases.map((a) => a.toLowerCase().replace(/[^a-z0-9]/g, ""));
+    expect(aliasNorms).toContain("adayla");
+    // No two brands share a normalized name (variants were merged, not duplicated).
+    const norms = seedBrands.map((b) => b.name.toLowerCase().replace(/[^a-z0-9]/g, ""));
+    expect(new Set(norms).size).toBe(norms.length);
+  });
+});
+
 describe("generated flavor seed", () => {
   it("has unique ids and resolvable brands", () => {
     const ids = new Set(seedFlavors.map((f) => f.id));
