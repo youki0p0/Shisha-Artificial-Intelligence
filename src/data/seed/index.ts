@@ -1,6 +1,7 @@
 /** Aggregated seed data + the full DB shape used by the JSON repository layer. */
 import {
   Brand,
+  CurationNote,
   FlavorMaster,
   HeatTemplate,
   MasterSubmission,
@@ -34,6 +35,7 @@ export type Database = {
   masterSubmissions: MasterSubmission[];
   photoSessions: PhotoImportSession[];
   photoDetectedItems: PhotoDetectedItem[];
+  curationNotes: CurationNote[];
 };
 
 /** Build a fresh seeded database (deep-cloned so callers can mutate safely). */
@@ -51,6 +53,7 @@ export function buildSeedDatabase(): Database {
     masterSubmissions: [],
     photoSessions: [],
     photoDetectedItems: [],
+    curationNotes: [],
   });
 }
 

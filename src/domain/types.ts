@@ -348,6 +348,25 @@ export type PhotoDetectedItem = {
   updatedAt: ISODateString;
 };
 
+/**
+ * Internal curation note on a flavor's parameters. Staff-only — never shown to
+ * end users. Lets a curator (or a later AI pass) flag "this value looks wrong"
+ * and track whether it has been addressed.
+ */
+export type CurationNoteStatus = "open" | "resolved";
+
+export type CurationNote = {
+  id: string;
+  flavorMasterId: string;
+  note: string;
+  /** Which parameter/field the note is about (free text, e.g. "nose_finish"). */
+  field?: string;
+  status: CurationNoteStatus;
+  authorId: string;
+  createdAt: ISODateString;
+  updatedAt: ISODateString;
+};
+
 export type MasterSubmissionStatus = "pending" | "approved" | "rejected" | "merged";
 
 export type MasterSubmission = {

@@ -8,6 +8,7 @@
  */
 import {
   Brand,
+  CurationNote,
   FlavorMaster,
   HeatTemplate,
   MasterSubmission,
@@ -100,6 +101,18 @@ export interface PhotoImportRepository {
   ): Promise<PhotoDetectedItem | undefined>;
 }
 
+export interface CurationNoteRepository {
+  /** All notes (for an AI pass to scan); newest first. */
+  list(): Promise<CurationNote[]>;
+  listByFlavor(flavorMasterId: string): Promise<CurationNote[]>;
+  create(note: CurationNote): Promise<CurationNote>;
+  update(
+    id: string,
+    patch: Partial<CurationNote>,
+  ): Promise<CurationNote | undefined>;
+  remove(id: string): Promise<void>;
+}
+
 export interface Repositories {
   brands: BrandRepository;
   flavors: FlavorRepository;
@@ -112,4 +125,5 @@ export interface Repositories {
   recipes: RecipeRepository;
   masterSubmissions: MasterSubmissionRepository;
   photoImport: PhotoImportRepository;
+  curationNotes: CurationNoteRepository;
 }

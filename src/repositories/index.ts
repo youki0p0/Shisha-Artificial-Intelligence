@@ -181,6 +181,42 @@ export const jsonRepositories: Repositories = {
     },
   },
 
+  curationNotes: {
+    async list() {
+      return [...(await getDb()).curationNotes].sort((a, b) =>
+        b.createdAt.localeCompare(a.createdAt),
+      );
+    },
+    async listByFlavor(flavorMasterId) {
+      return (await getDb()).curationNotes
+        .filter((n) => n.flavorMasterId === flavorMasterId)
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    },
+    async create(note) {
+      return mutate((db) => {
+        db.curationNotes.push(note);
+        return note;
+      });
+    },
+    async update(id, patch) {
+      return mutate((db) => {
+        const idx = db.curationNotes.findIndex((n) => n.id === id);
+        if (idx === -1) return undefined;
+        db.curationNotes[idx] = {
+          ...db.curationNotes[idx],
+          ...patch,
+          updatedAt: new Date().toISOString(),
+        };
+        return db.curationNotes[idx];
+      });
+    },
+    async remove(id) {
+      await mutate((db) => {
+        db.curationNotes = db.curationNotes.filter((n) => n.id !== id);
+      });
+    },
+  },
+
   photoImport: {
     async listSessionsByUser(userId) {
       return (await getDb()).photoSessions.filter((s) => s.userId === userId);

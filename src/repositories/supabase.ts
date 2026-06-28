@@ -12,6 +12,7 @@
  * types in src/domain/types.ts remain the single source of truth.
  */
 import {
+  CurationNote,
   MasterSubmission,
   PhotoDetectedItem,
   PhotoImportSession,
@@ -182,6 +183,60 @@ export const supabaseRepositories: Repositories = {
         .update({ status: updated.status, data: updated, updated_at: updated.updatedAt })
         .eq("id", id);
       return updated;
+    },
+  },
+
+  curationNotes: {
+    async list() {
+      const sb = await getServerSupabase();
+      const { data } = await sb
+        .from("flavor_curation_notes")
+        .select("data")
+        .order("created_at", { ascending: false });
+      return (data ?? []).map((r) => r.data as CurationNote);
+    },
+    async listByFlavor(flavorMasterId) {
+      const sb = await getServerSupabase();
+      const { data } = await sb
+        .from("flavor_curation_notes")
+        .select("data")
+        .eq("flavor_master_id", flavorMasterId)
+        .order("created_at", { ascending: false });
+      return (data ?? []).map((r) => r.data as CurationNote);
+    },
+    async create(note) {
+      const sb = await getServerSupabase();
+      await sb.from("flavor_curation_notes").insert({
+        id: note.id,
+        flavor_master_id: note.flavorMasterId,
+        status: note.status,
+        author_id: note.authorId,
+        data: note,
+      });
+      return note;
+    },
+    async update(id, patch) {
+      const sb = await getServerSupabase();
+      const { data: row } = await sb
+        .from("flavor_curation_notes")
+        .select("data")
+        .eq("id", id)
+        .maybeSingle();
+      if (!row) return undefined;
+      const updated: CurationNote = {
+        ...(row.data as CurationNote),
+        ...patch,
+        updatedAt: now(),
+      };
+      await sb
+        .from("flavor_curation_notes")
+        .update({ status: updated.status, data: updated, updated_at: updated.updatedAt })
+        .eq("id", id);
+      return updated;
+    },
+    async remove(id) {
+      const sb = await getServerSupabase();
+      await sb.from("flavor_curation_notes").delete().eq("id", id);
     },
   },
 

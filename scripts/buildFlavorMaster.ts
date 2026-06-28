@@ -62,18 +62,25 @@ const resolveBrand: BrandResolver = (brandName) => {
   return { id, name: brandName };
 };
 
-const derived = profiles.map((p) => deriveFlavorMaster(p, spec, resolveBrand, T));
+const derived = profiles.map((p) => ({
+  fm: deriveFlavorMaster(p, spec, resolveBrand, T),
+  profile: p,
+}));
 
 // Brand case/spelling variants (e.g. "DOZAJ" vs "Dozaj") can collide on the same
 // id. Keep the profiled (verified) record over a stub; otherwise keep the first.
-const byId = new Map<string, FlavorMaster>();
-for (const f of derived) {
-  const prev = byId.get(f.id);
-  if (!prev || (prev.dataStatus !== "verified" && f.dataStatus === "verified")) {
-    byId.set(f.id, f);
+const byId = new Map<string, (typeof derived)[number]>();
+for (const d of derived) {
+  const prev = byId.get(d.fm.id);
+  if (!prev || (prev.fm.dataStatus !== "verified" && d.fm.dataStatus === "verified")) {
+    byId.set(d.fm.id, d);
   }
 }
-const flavors: FlavorMaster[] = [...byId.values()];
+const flavors: FlavorMaster[] = [...byId.values()].map((d) => d.fm);
+// Raw curated sensory profile (the 22 CSV columns) keyed by flavor id — for the
+// admin inspector, kept out of the main bundle in its own module.
+const profilesById: Record<string, (typeof profiles)[number]> = {};
+for (const [id, d] of byId) profilesById[id] = d.profile;
 if (flavors.length !== derived.length) {
   console.log(`Deduped ${derived.length - flavors.length} duplicate flavor id(s).`);
 }
@@ -98,6 +105,14 @@ const out =
 
 const target = resolve(ROOT, "src/data/seed/flavors.generated.ts");
 writeFileSync(target, out);
+
+// Separate module (admin-only, server-side) with the raw sensory profiles.
+const profilesOut =
+  banner +
+  'import { FlavorProfile } from "@/data/master/flavorProfile";\n\n' +
+  `/** Raw curated 22-column sensory profile by flavor id (for the admin inspector). */\n` +
+  `export const generatedProfiles: Record<string, FlavorProfile> = JSON.parse(\n  ${JSON.stringify(JSON.stringify(profilesById))},\n) as Record<string, FlavorProfile>;\n`;
+writeFileSync(resolve(ROOT, "src/data/seed/flavorProfiles.generated.ts"), profilesOut);
 
 const profiled = flavors.filter((f) => f.dataStatus === "verified").length;
 console.log(

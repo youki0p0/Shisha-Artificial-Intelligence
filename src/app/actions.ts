@@ -257,3 +257,50 @@ function emptyToUndef(v: FormDataEntryValue | null): string | undefined {
   const s = String(v).trim();
   return s === "" ? undefined : s;
 }
+
+// --- Internal flavor curation notes (staff only) ----------------------------
+
+export async function addCurationNoteAction(formData: FormData) {
+  const repos = getRepositories();
+  const user = await getCurrentUser();
+  if (!isCuratorOrAdmin(user)) throw new Error("forbidden");
+
+  const flavorMasterId = String(formData.get("flavorMasterId") ?? "").trim();
+  const note = String(formData.get("note") ?? "").trim();
+  const field = emptyToUndef(formData.get("field"));
+  if (!flavorMasterId || !note) return;
+
+  const ts = nowIso();
+  await repos.curationNotes.create({
+    id: newId("note"),
+    flavorMasterId,
+    note,
+    field,
+    status: "open",
+    authorId: user.id,
+    createdAt: ts,
+    updatedAt: ts,
+  });
+  revalidatePath("/admin");
+}
+
+export async function toggleCurationNoteAction(formData: FormData) {
+  const repos = getRepositories();
+  const user = await getCurrentUser();
+  if (!isCuratorOrAdmin(user)) throw new Error("forbidden");
+
+  const id = String(formData.get("id") ?? "");
+  const next = String(formData.get("status") ?? "resolved") === "resolved"
+    ? "resolved"
+    : "open";
+  await repos.curationNotes.update(id, { status: next });
+  revalidatePath("/admin");
+}
+
+export async function deleteCurationNoteAction(formData: FormData) {
+  const repos = getRepositories();
+  const user = await getCurrentUser();
+  if (!isCuratorOrAdmin(user)) throw new Error("forbidden");
+  await repos.curationNotes.remove(String(formData.get("id") ?? ""));
+  revalidatePath("/admin");
+}
