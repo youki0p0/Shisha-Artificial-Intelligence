@@ -84,6 +84,8 @@ export const flavorMasterSchema = z.object({
   soloUsability: score0to10,
   description: z.string().optional(),
   notes: z.string().optional(),
+  confidence: z.number().optional(),
+  sourceUrl: z.string().optional(),
   dataStatus: z.enum(["verified", "community", "pending", "unknown"]),
   createdAt: z.string(),
   updatedAt: z.string(),

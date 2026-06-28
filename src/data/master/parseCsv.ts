@@ -104,6 +104,8 @@ export function parseFlavorMasterCsv(text: string): FlavorProfile[] {
     realism: idx("realism"),
     expanded_role: idx("expanded_role"),
     notes: idx("notes"),
+    confidence: idx("confidence"),
+    source_urls: idx("source_urls"),
   };
 
   const rows: FlavorProfile[] = [];
@@ -136,6 +138,8 @@ export function parseFlavorMasterCsv(text: string): FlavorProfile[] {
       realism: oneOf(f[col.realism], REALISM),
       expanded_role: cell(f[col.expanded_role]),
       notes: cell(f[col.notes]),
+      confidence: num(f[col.confidence]),
+      source_urls: cell(f[col.source_urls]),
     };
     rows.push(flavorProfileSchema.parse(profile));
   }

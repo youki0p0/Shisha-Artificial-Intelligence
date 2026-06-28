@@ -1,5 +1,6 @@
 import { Brand } from "@/domain/types";
 import { generatedBrands } from "./flavors.generated";
+import brandAliases from "@/data/master/brand_aliases.json";
 
 const T = "2025-01-01T00:00:00.000Z";
 
@@ -80,7 +81,17 @@ export const curatedBrands: Brand[] = [
  * id, curated entries win so their hand-written aliases/notes are preserved).
  */
 const curatedIds = new Set(curatedBrands.map((b) => b.id));
-export const seedBrands: Brand[] = [
+const merged: Brand[] = [
   ...curatedBrands,
   ...generatedBrands.filter((b) => !curatedIds.has(b.id)),
 ];
+
+// Attach known spelling variants (ADALYA / adayla → Adalya, …) as aliases so the
+// search and any future imports tolerate the casing/typo variants we collapsed
+// when normalizing the CSV. The CSV itself only stores canonical brand names.
+const aliasMap = brandAliases as Record<string, string[]>;
+export const seedBrands: Brand[] = merged.map((b) => {
+  const variants = aliasMap[b.name];
+  if (!variants || variants.length === 0) return b;
+  return { ...b, aliases: [...new Set([...b.aliases, ...variants])] };
+});
