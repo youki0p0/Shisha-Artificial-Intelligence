@@ -11,6 +11,8 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  EmptyState,
+  PageHeader,
 } from "@/components/ui/primitives";
 
 /**
@@ -32,8 +34,8 @@ export default async function AdminPage() {
 
   if (!isCuratorOrAdmin(user)) {
     return (
-      <div className="space-y-4">
-        <h1 className="text-2xl font-bold">管理 / キュレーター</h1>
+      <div className="space-y-6">
+        <PageHeader eyebrow="Admin" title="管理 / キュレーター" />
         <Card>
           <CardContent className="py-6 text-sm text-muted-foreground">
             この画面はキュレーター / 管理者のみ利用できます。現在のロール: {user.role}。
@@ -50,16 +52,18 @@ export default async function AdminPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">管理 / キュレーター</h1>
+      <PageHeader
+        eyebrow="Admin"
+        title="管理 / キュレーター"
+        description="マスターデータの確認と、ユーザーからの登録申請レビュー。"
+      />
 
       <Card>
         <CardHeader>
           <CardTitle>マスター登録申請（要レビュー: {pending.length}）</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {submissions.length === 0 && (
-            <p className="text-sm text-muted-foreground">申請はありません。</p>
-          )}
+          {submissions.length === 0 && <EmptyState title="申請はありません" />}
           {submissions.map((s) => (
             <div
               key={s.id}

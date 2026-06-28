@@ -11,6 +11,7 @@ import {
   CardTitle,
   Input,
   Label,
+  PageHeader,
 } from "@/components/ui/primitives";
 
 export default async function PhotoImportPage() {
@@ -20,13 +21,11 @@ export default async function PhotoImportPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">写真取込</h1>
-        <p className="text-sm text-muted-foreground">
-          棚・パッケージ・ラベル・販売リスト・スクショなどの写真からOCRで在庫候補を抽出します。
-          MVPではOCRはモック実装です（後で実OCRに差し替え可能）。
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Photo Import"
+        title="写真取込"
+        description="棚・パッケージ・ラベル・販売リスト・スクショからOCRで在庫候補を抽出します（MVPはモックOCR）。"
+      />
 
       <Card>
         <CardHeader>
