@@ -18,9 +18,11 @@ import {
   currentWage,
   formatMonth,
   formatYen,
+  isMonthKey,
   sortWages,
+  wageForMonth,
 } from "@/lib/wages";
-import { formatDate, summarizePayroll } from "@/lib/shifts";
+import { formatDate, monthOf, summarizePayroll } from "@/lib/shifts";
 import type { ShiftEntry } from "@/domain/types";
 import {
   Badge,
@@ -76,9 +78,9 @@ const PROFILE_FIELDS: [keyof FlavorProfile, string][] = [
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams: Promise<{ fq?: string; fid?: string }>;
+  searchParams: Promise<{ fq?: string; fid?: string; pm?: string }>;
 }) {
-  const { fq, fid } = await searchParams;
+  const { fq, fid, pm } = await searchParams;
   const user = await getCurrentUser();
   const repos = getRepositories();
   const [brands, flavors, tasteWords, synergy, heat, submissions, allNotes, users] =
@@ -103,6 +105,23 @@ export default async function AdminPage({
     );
     for (const [id, list] of entries) shiftsByUser[id] = list;
   }
+
+  // Cross-staff payroll roster for one month (for handing out pay).
+  const payrollMonth = pm && isMonthKey(pm) ? pm : currentMonth();
+  const roster = users
+    .map((u) => {
+      const monthShifts = (shiftsByUser[u.id] ?? []).filter(
+        (s) => monthOf(s.date) === payrollMonth,
+      );
+      const hours =
+        Math.round(monthShifts.reduce((a, s) => a + s.hours, 0) * 100) / 100;
+      const wage = wageForMonth(u.wages, payrollMonth);
+      const pay = wage === undefined ? undefined : Math.round(hours * wage);
+      return { u, count: monthShifts.length, hours, wage, pay };
+    })
+    // Only real staff: anyone with a wage schedule or shifts that month.
+    .filter((r) => r.count > 0 || (r.u.wages?.length ?? 0) > 0);
+  const rosterTotal = roster.reduce((a, r) => a + (r.pay ?? 0), 0);
 
   if (!isCuratorOrAdmin(user)) {
     return (
@@ -143,6 +162,88 @@ export default async function AdminPage({
         title="管理 / キュレーター"
         description="マスターデータの確認と、ユーザーからの登録申請レビュー。"
       />
+
+      {isAdmin(user) && (
+        <Card>
+          <CardHeader>
+            <CardTitle>月次給与一覧 / 給料渡し用（管理者専用）</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <form className="flex items-end gap-2" method="get">
+              <div>
+                <Label>対象月</Label>
+                <Input type="month" name="pm" defaultValue={payrollMonth} />
+              </div>
+              <Button type="submit" variant="outline" size="sm">
+                表示
+              </Button>
+            </form>
+
+            {roster.length === 0 ? (
+              <EmptyState title={`${formatMonth(payrollMonth)}の対象スタッフはいません`} />
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-muted-foreground text-xs">
+                    <th className="py-1 text-left font-normal">スタッフ</th>
+                    <th className="py-1 text-right font-normal">勤務</th>
+                    <th className="py-1 text-right font-normal">時間</th>
+                    <th className="py-1 text-right font-normal">時給</th>
+                    <th className="py-1 text-right font-normal">支給額</th>
+                    <th className="py-1 text-right font-normal">明細</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {roster.map((r) => (
+                    <tr key={r.u.id} className="border-b border-border/40">
+                      <td className="py-1.5">
+                        {r.u.displayName}
+                        {r.u.handle && (
+                          <span className="ml-1.5 lisso-mono text-[11px] text-muted-foreground">
+                            @{r.u.handle}
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-1.5 text-right tabular-nums text-muted-foreground">
+                        {r.count}日
+                      </td>
+                      <td className="py-1.5 text-right tabular-nums">{r.hours}h</td>
+                      <td className="py-1.5 text-right tabular-nums text-muted-foreground">
+                        {r.wage !== undefined ? formatYen(r.wage) : "未設定"}
+                      </td>
+                      <td className="py-1.5 text-right tabular-nums font-medium">
+                        {r.pay !== undefined ? formatYen(r.pay) : "—"}
+                      </td>
+                      <td className="py-1.5 text-right">
+                        <Link
+                          href={`/payslip/${r.u.id}/${payrollMonth}`}
+                          className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                        >
+                          明細
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="border-t">
+                    <td className="py-1.5 font-medium" colSpan={4}>
+                      合計支給額（{formatMonth(payrollMonth)}）
+                    </td>
+                    <td className="py-1.5 text-right font-semibold tabular-nums">
+                      {formatYen(rosterTotal)}
+                    </td>
+                    <td />
+                  </tr>
+                </tfoot>
+              </table>
+            )}
+            <p className="text-[11px] text-muted-foreground">
+              ※ 総支給額（控除前）。各行の「明細」から従業員に渡す給与明細を開けます。時給の変更・勤務追加は下の「ユーザー管理」から行えます。
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {isAdmin(user) && (
         <Card>
