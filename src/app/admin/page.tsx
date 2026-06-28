@@ -135,6 +135,10 @@ export default async function AdminPage() {
 }
 
 function ManagementList({ title, items }: { title: string; items: string[] }) {
+  // Cap the preview so large master tables (3,000+ flavors) stay snappy.
+  const LIMIT = 50;
+  const shown = items.slice(0, LIMIT);
+  const overflow = items.length - shown.length;
   return (
     <Card>
       <CardHeader>
@@ -142,10 +146,15 @@ function ManagementList({ title, items }: { title: string; items: string[] }) {
       </CardHeader>
       <CardContent>
         <ul className="text-sm space-y-1 list-disc pl-5 text-muted-foreground">
-          {items.map((it, i) => (
+          {shown.map((it, i) => (
             <li key={i}>{it}</li>
           ))}
         </ul>
+        {overflow > 0 && (
+          <p className="text-xs text-muted-foreground/70 mt-2">
+            ほか {overflow.toLocaleString()} 件
+          </p>
+        )}
       </CardContent>
     </Card>
   );
