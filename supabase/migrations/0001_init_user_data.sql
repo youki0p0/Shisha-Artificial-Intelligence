@@ -148,3 +148,28 @@ create policy photo_sessions_owner on public.photo_sessions
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 create policy photo_items_owner on public.photo_detected_items
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+-- ---------------------------------------------------------------------------
+-- Grants
+--
+-- RLS controls *rows*, but roles still need table-level privileges. Some
+-- projects don't auto-grant new public tables to anon/authenticated, so set
+-- them explicitly. RLS keeps each user to their own rows regardless.
+-- ---------------------------------------------------------------------------
+grant usage on schema public to anon, authenticated;
+
+grant select, insert, update, delete on
+  public.profiles,
+  public.inventory,
+  public.recipes,
+  public.master_submissions,
+  public.photo_sessions,
+  public.photo_detected_items
+to authenticated;
+
+-- Logged-out viewers can read public/unlisted shared recipes (RLS-gated).
+grant select on public.recipes to anon;
+
+-- Auto-grant any future public tables too.
+alter default privileges in schema public
+  grant select, insert, update, delete on tables to authenticated;
