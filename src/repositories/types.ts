@@ -15,6 +15,7 @@ import {
   PhotoDetectedItem,
   PhotoImportSession,
   Recipe,
+  ShiftEntry,
   SynergyRule,
   TasteWord,
   TroubleshootingRule,
@@ -106,6 +107,12 @@ export interface PhotoImportRepository {
   ): Promise<PhotoDetectedItem | undefined>;
 }
 
+export interface ShiftRepository {
+  listByUser(userId: string): Promise<ShiftEntry[]>;
+  create(shift: ShiftEntry): Promise<ShiftEntry>;
+  remove(id: string): Promise<void>;
+}
+
 export interface CurationNoteRepository {
   /** All notes (for an AI pass to scan); newest first. */
   list(): Promise<CurationNote[]>;
@@ -131,4 +138,5 @@ export interface Repositories {
   masterSubmissions: MasterSubmissionRepository;
   photoImport: PhotoImportRepository;
   curationNotes: CurationNoteRepository;
+  shifts: ShiftRepository;
 }

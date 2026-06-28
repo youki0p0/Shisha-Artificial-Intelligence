@@ -8,6 +8,7 @@ import {
   PhotoDetectedItem,
   PhotoImportSession,
   Recipe,
+  ShiftEntry,
   SynergyRule,
   TasteWord,
   TroubleshootingRule,
@@ -20,7 +21,7 @@ import { seedTasteWords } from "./tasteWords";
 import { seedSynergyRules } from "./synergy";
 import { seedHeatTemplates } from "./heatTemplates";
 import { seedTroubleshootingRules } from "./troubleshooting";
-import { seedInventory, seedUsers } from "./users";
+import { seedInventory, seedShifts, seedUsers } from "./users";
 
 export type Database = {
   brands: Brand[];
@@ -36,6 +37,7 @@ export type Database = {
   photoSessions: PhotoImportSession[];
   photoDetectedItems: PhotoDetectedItem[];
   curationNotes: CurationNote[];
+  shifts: ShiftEntry[];
 };
 
 /** Build a fresh seeded database (deep-cloned so callers can mutate safely). */
@@ -54,6 +56,7 @@ export function buildSeedDatabase(): Database {
     photoSessions: [],
     photoDetectedItems: [],
     curationNotes: [],
+    shifts: seedShifts,
   });
 }
 
@@ -66,4 +69,5 @@ export {
   seedTroubleshootingRules,
   seedUsers,
   seedInventory,
+  seedShifts,
 };

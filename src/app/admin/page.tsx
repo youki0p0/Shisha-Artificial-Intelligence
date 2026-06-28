@@ -3,9 +3,11 @@ import { getRepositories } from "@/repositories";
 import { getCurrentUser, isAdmin, isCuratorOrAdmin } from "@/lib/auth";
 import {
   addCurationNoteAction,
+  addShiftAction,
   addWageEntryAction,
   approveSubmissionAction,
   deleteCurationNoteAction,
+  deleteShiftAction,
   deleteWageEntryAction,
   rejectSubmissionAction,
   renameUserAction,
@@ -18,6 +20,8 @@ import {
   formatYen,
   sortWages,
 } from "@/lib/wages";
+import { formatDate, summarizePayroll } from "@/lib/shifts";
+import type { ShiftEntry } from "@/domain/types";
 import {
   Badge,
   Button,
@@ -89,6 +93,17 @@ export default async function AdminPage({
       repos.users.list(),
     ]);
 
+  // Shift logs (admin-only payroll). Fetch per user in parallel.
+  const shiftsByUser: Record<string, ShiftEntry[]> = {};
+  if (isAdmin(user)) {
+    const entries = await Promise.all(
+      users.map(
+        async (u) => [u.id, await repos.shifts.listByUser(u.id)] as const,
+      ),
+    );
+    for (const [id, list] of entries) shiftsByUser[id] = list;
+  }
+
   if (!isCuratorOrAdmin(user)) {
     return (
       <div className="space-y-6">
@@ -142,6 +157,8 @@ export default async function AdminPage({
               {users.map((u) => {
                 const wages = sortWages(u.wages ?? []);
                 const eff = currentWage(u.wages);
+                const shifts = shiftsByUser[u.id] ?? [];
+                const payroll = summarizePayroll(shifts, u.wages);
                 return (
                   <div key={u.id} className="rounded-md border p-3 space-y-3">
                     <div className="flex flex-wrap items-center gap-2">
@@ -228,6 +245,94 @@ export default async function AdminPage({
                         時給を追加
                       </Button>
                     </form>
+
+                    {/* Payroll summary by month */}
+                    {payroll.length > 0 && (
+                      <div className="space-y-1.5 border-t pt-3">
+                        <div className="lisso-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                          月次給与（勤務時間 × 時給）
+                        </div>
+                        <table className="w-full text-sm">
+                          <tbody>
+                            {payroll.map((p) => (
+                              <tr key={p.month} className="border-b border-border/40">
+                                <td className="py-1 lisso-mono text-muted-foreground">
+                                  {formatMonth(p.month)}
+                                </td>
+                                <td className="py-1 text-right tabular-nums">
+                                  {p.hours}h
+                                </td>
+                                <td className="py-1 text-right text-muted-foreground tabular-nums">
+                                  {p.wage !== undefined ? `× ${formatYen(p.wage)}` : "時給未設定"}
+                                </td>
+                                <td className="py-1 text-right font-medium tabular-nums">
+                                  {p.pay !== undefined ? formatYen(p.pay) : "—"}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+
+                    {/* Shift log */}
+                    <details className="border-t pt-3">
+                      <summary className="cursor-pointer text-sm text-muted-foreground">
+                        勤務記録（{shifts.length}件）
+                      </summary>
+                      <div className="mt-2 space-y-1.5">
+                        {shifts.length === 0 ? (
+                          <p className="text-xs text-muted-foreground">記録はありません。</p>
+                        ) : (
+                          <ul className="text-sm space-y-1">
+                            {shifts.map((s) => (
+                              <li key={s.id} className="flex items-center gap-2">
+                                <span className="lisso-mono text-muted-foreground w-14">
+                                  {formatDate(s.date)}
+                                </span>
+                                <span className="tabular-nums text-muted-foreground">
+                                  {s.start}–{s.end}
+                                </span>
+                                <span className="tabular-nums font-medium">{s.hours}h</span>
+                                <form action={deleteShiftAction} className="ml-auto">
+                                  <input type="hidden" name="id" value={s.id} />
+                                  <Button size="sm" variant="ghost" type="submit">
+                                    削除
+                                  </Button>
+                                </form>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+
+                        {/* Add shift */}
+                        <form
+                          action={addShiftAction}
+                          className="flex flex-wrap items-end gap-2 border-t pt-3"
+                        >
+                          <input type="hidden" name="userId" value={u.id} />
+                          <div>
+                            <Label>日付</Label>
+                            <Input type="date" name="date" />
+                          </div>
+                          <div>
+                            <Label>開始</Label>
+                            <Input type="time" name="start" defaultValue="13:00" />
+                          </div>
+                          <div>
+                            <Label>終了</Label>
+                            <Input type="time" name="end" defaultValue="21:00" />
+                          </div>
+                          <div className="w-24">
+                            <Label>休憩(分)</Label>
+                            <Input type="number" name="breakMinutes" min={0} step={5} defaultValue={0} />
+                          </div>
+                          <Button size="sm" type="submit">
+                            勤務を追加
+                          </Button>
+                        </form>
+                      </div>
+                    </details>
                   </div>
                 );
               })}

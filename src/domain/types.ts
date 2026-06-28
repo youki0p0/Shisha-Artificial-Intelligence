@@ -276,6 +276,24 @@ export type UserProfile = {
   updatedAt: ISODateString;
 };
 
+/**
+ * One staff work shift (timecard row). Hours are derived from start/end minus
+ * break, but stored so a manual override (or odd rounding) is preserved.
+ * Admin-managed; combined with the wage schedule to compute monthly pay.
+ */
+export type ShiftEntry = {
+  id: string;
+  userId: string;
+  date: string; // "YYYY-MM-DD"
+  start: string; // "HH:MM"
+  end: string; // "HH:MM"
+  breakMinutes?: number;
+  hours: number; // worked hours (decimal)
+  note?: string;
+  createdAt: ISODateString;
+  updatedAt: ISODateString;
+};
+
 export type InventoryStatus = "in_stock" | "low" | "out" | "planned";
 export type InventorySource = "manual" | "photo_import" | "csv" | "web_search";
 

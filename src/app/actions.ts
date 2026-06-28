@@ -25,7 +25,8 @@ import {
 } from "@/lib/auth";
 import { newId, nowIso } from "@/lib/ids";
 import { isMonthKey } from "@/lib/wages";
-import { WageEntry } from "@/domain/types";
+import { computeHours, isDate, isTime } from "@/lib/shifts";
+import { ShiftEntry, WageEntry } from "@/domain/types";
 import { getOcrAdapter } from "@/adapters/ocr";
 import { matchText } from "@/engines/matcher";
 
@@ -371,5 +372,46 @@ export async function deleteWageEntryAction(formData: FormData) {
   await repos.users.update(userId, {
     wages: (target.wages ?? []).filter((w) => w.id !== wageId),
   });
+  revalidatePath("/admin");
+}
+
+/** Record one work shift; hours derived from start/end minus break. */
+export async function addShiftAction(formData: FormData) {
+  const repos = getRepositories();
+  const actor = await getCurrentUser();
+  if (!isAdmin(actor)) throw new Error("forbidden");
+
+  const userId = String(formData.get("userId") ?? "").trim();
+  const date = String(formData.get("date") ?? "").trim();
+  const start = String(formData.get("start") ?? "").trim();
+  const end = String(formData.get("end") ?? "").trim();
+  const breakMinutes = Number(formData.get("breakMinutes")) || 0;
+  if (!userId || !isDate(date) || !isTime(start) || !isTime(end)) return;
+
+  const hours = computeHours(start, end, breakMinutes);
+  if (hours <= 0) return;
+
+  const ts = nowIso();
+  const shift: ShiftEntry = {
+    id: newId("shift"),
+    userId,
+    date,
+    start,
+    end,
+    breakMinutes,
+    hours,
+    createdAt: ts,
+    updatedAt: ts,
+  };
+  await repos.shifts.create(shift);
+  revalidatePath("/admin");
+}
+
+/** Delete one work shift. */
+export async function deleteShiftAction(formData: FormData) {
+  const repos = getRepositories();
+  const actor = await getCurrentUser();
+  if (!isAdmin(actor)) throw new Error("forbidden");
+  await repos.shifts.remove(String(formData.get("id") ?? ""));
   revalidatePath("/admin");
 }

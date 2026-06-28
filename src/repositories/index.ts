@@ -229,6 +229,25 @@ export const jsonRepositories: Repositories = {
     },
   },
 
+  shifts: {
+    async listByUser(userId) {
+      return (await getDb()).shifts
+        .filter((s) => s.userId === userId)
+        .sort((a, b) => b.date.localeCompare(a.date));
+    },
+    async create(shift) {
+      return mutate((db) => {
+        db.shifts.push(shift);
+        return shift;
+      });
+    },
+    async remove(id) {
+      await mutate((db) => {
+        db.shifts = db.shifts.filter((s) => s.id !== id);
+      });
+    },
+  },
+
   photoImport: {
     async listSessionsByUser(userId) {
       return (await getDb()).photoSessions.filter((s) => s.userId === userId);

@@ -17,6 +17,7 @@ import {
   PhotoDetectedItem,
   PhotoImportSession,
   Recipe,
+  ShiftEntry,
   UserInventoryItem,
   UserProfile,
 } from "@/domain/types";
@@ -250,6 +251,32 @@ export const supabaseRepositories: Repositories = {
     async remove(id) {
       const sb = await getServerSupabase();
       await sb.from("flavor_curation_notes").delete().eq("id", id);
+    },
+  },
+
+  shifts: {
+    async listByUser(userId) {
+      const sb = await getServerSupabase();
+      const { data } = await sb
+        .from("staff_shifts")
+        .select("data")
+        .eq("user_id", userId)
+        .order("date", { ascending: false });
+      return (data ?? []).map((r) => r.data as ShiftEntry);
+    },
+    async create(shift) {
+      const sb = await getServerSupabase();
+      await sb.from("staff_shifts").insert({
+        id: shift.id,
+        user_id: shift.userId,
+        date: shift.date,
+        data: shift,
+      });
+      return shift;
+    },
+    async remove(id) {
+      const sb = await getServerSupabase();
+      await sb.from("staff_shifts").delete().eq("id", id);
     },
   },
 
