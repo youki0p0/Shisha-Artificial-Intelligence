@@ -85,13 +85,16 @@ const banner =
   "// Source: src/data/master/flavor_master.csv + derivation_spec.json\n" +
   "// Regenerate with: npm run flavors:build\n";
 
+// The data is embedded as a JSON string and parsed at module load. With ~3k
+// records a raw object literal makes tsc build an enormous union type (TS2590);
+// JSON.parse sidesteps that entirely while staying a single synchronous import.
 const out =
   banner +
   'import { Brand, FlavorMaster } from "@/domain/types";\n\n' +
   `/** Brands introduced by the curated CSV (not already in the hand seed). */\n` +
-  `export const generatedBrands: Brand[] = ${JSON.stringify(generatedBrands, null, 2)};\n\n` +
+  `export const generatedBrands: Brand[] = JSON.parse(\n  ${JSON.stringify(JSON.stringify(generatedBrands))},\n) as Brand[];\n\n` +
   `/** FlavorMaster records derived deterministically from the curated CSV. */\n` +
-  `export const generatedFlavors: FlavorMaster[] = ${JSON.stringify(flavors, null, 2)};\n`;
+  `export const generatedFlavors: FlavorMaster[] = JSON.parse(\n  ${JSON.stringify(JSON.stringify(flavors))},\n) as FlavorMaster[];\n`;
 
 const target = resolve(ROOT, "src/data/seed/flavors.generated.ts");
 writeFileSync(target, out);
