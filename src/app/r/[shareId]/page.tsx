@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { getRepositories } from "@/repositories";
 import { getCurrentUserId } from "@/lib/auth";
 import { flavorToVector } from "@/domain/taste";
@@ -9,7 +10,27 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  PageHeader,
 } from "@/components/ui/primitives";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ shareId: string }>;
+}): Promise<Metadata> {
+  const { shareId } = await params;
+  const recipe = await getRepositories().recipes.getByShareId(shareId);
+  if (!recipe) return { title: "共有レシピ" };
+  return {
+    title: recipe.title,
+    description: recipe.concept || "ShishaOS で生成された共有レシピ。",
+    openGraph: {
+      title: recipe.title,
+      description: recipe.concept || "ShishaOS の共有レシピ",
+      type: "article",
+    },
+  };
+}
 
 /**
  * Shared recipe view. Compares the shared recipe against the *current* user's
@@ -72,12 +93,11 @@ export default async function SharedRecipePage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">共有レシピ</h1>
-        <p className="text-sm text-muted-foreground">
-          あなたの在庫と照合しています。
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Shared Recipe"
+        title={recipe.title}
+        description="あなたの在庫と照合しています。"
+      />
 
       <Card>
         <CardHeader>
