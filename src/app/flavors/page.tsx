@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getRepositories } from "@/repositories";
 import { addManualInventoryAction } from "@/app/actions";
 import { TasteBars } from "@/components/TasteBars";
@@ -68,7 +69,9 @@ export default async function FlavorsPage({
             <CardHeader>
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <CardTitle>
-                  {f.displayNameJa ?? f.name}
+                  <Link href={`/flavors/${f.id}`} className="hover:underline">
+                    {f.displayNameJa ?? f.name}
+                  </Link>
                   <span className="ml-2 text-sm font-normal text-muted-foreground">
                     {brandById.get(f.brandId)?.name}
                   </span>

@@ -27,7 +27,12 @@ const STATUS_VARIANT: Record<string, "success" | "warn" | "muted" | "outline"> =
   planned: "outline",
 };
 
-export default async function InventoryPage() {
+export default async function InventoryPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ brand?: string }>;
+}) {
+  const { brand: brandFilter } = await searchParams;
   const userId = await getCurrentUserId();
   const repos = getRepositories();
   const [inventory, flavors, brands] = await Promise.all([
@@ -37,6 +42,17 @@ export default async function InventoryPage() {
   ]);
   const flavorById = new Map(flavors.map((f) => [f.id, f]));
   const brandById = new Map(brands.map((b) => [b.id, b]));
+
+  const itemBrand = (item: (typeof inventory)[number]) => {
+    const fm = item.flavorMasterId ? flavorById.get(item.flavorMasterId) : undefined;
+    return fm ? brandById.get(fm.brandId)?.name ?? "—" : item.customBrand ?? "カスタム";
+  };
+  const presentBrands = [...new Set(inventory.map(itemBrand))].sort((a, b) =>
+    a.localeCompare(b),
+  );
+  const filtered = brandFilter
+    ? inventory.filter((i) => itemBrand(i) === brandFilter)
+    : inventory;
 
   return (
     <div className="space-y-6">
@@ -108,63 +124,124 @@ export default async function InventoryPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>在庫一覧（{inventory.length}）</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {inventory.length === 0 && (
-            <EmptyState
-              title="在庫がありません"
-              description="上のフォーム、または写真取込から追加してください。"
-            />
-          )}
-          {inventory.map((item) => {
-            const fm = item.flavorMasterId ? flavorById.get(item.flavorMasterId) : undefined;
-            const name = fm
-              ? `${brandById.get(fm.brandId)?.name ?? ""} / ${fm.displayNameJa ?? fm.name}`
-              : `${item.customBrand ?? "カスタム"} / ${item.customName ?? "(無名)"}`;
-            return (
-              <div
-                key={item.id}
-                className="flex items-center justify-between gap-2 border rounded-md px-3 py-2 flex-wrap lisso-card-hover"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">{name}</span>
-                  {item.amountGram != null && (
-                    <Badge variant="muted">{item.amountGram}g</Badge>
-                  )}
-                  <Badge variant={STATUS_VARIANT[item.status] ?? "muted"}>
-                    {item.status}
-                  </Badge>
-                  <Badge variant="outline">{item.source}</Badge>
-                  {!fm && <Badge variant="warn">custom</Badge>}
-                </div>
-                <div className="flex items-center gap-2">
-                  <form action={updateInventoryStatusAction} className="flex items-center gap-1">
-                    <input type="hidden" name="id" value={item.id} />
-                    <Select name="status" defaultValue={item.status} className="h-8 w-28">
-                      <option value="in_stock">在庫あり</option>
-                      <option value="low">わずか</option>
-                      <option value="out">切れ</option>
-                      <option value="planned">予定</option>
-                    </Select>
-                    <Button size="sm" variant="outline" type="submit">
-                      更新
-                    </Button>
-                  </form>
-                  <form action={removeInventoryAction}>
-                    <input type="hidden" name="id" value={item.id} />
-                    <Button size="sm" variant="destructive" type="submit">
-                      削除
-                    </Button>
-                  </form>
-                </div>
-              </div>
-            );
-          })}
-        </CardContent>
-      </Card>
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <h2 className="font-display text-lg">
+            在庫一覧
+            <span className="ml-2 lisso-mono text-sm text-muted-foreground">
+              {filtered.length}/{inventory.length}
+            </span>
+          </h2>
+        </div>
+
+        {presentBrands.length > 1 && (
+          <div className="flex flex-wrap gap-1.5">
+            <BrandChip label="すべて" href="/inventory" active={!brandFilter} />
+            {presentBrands.map((b) => (
+              <BrandChip
+                key={b}
+                label={b}
+                href={`/inventory?brand=${encodeURIComponent(b)}`}
+                active={brandFilter === b}
+              />
+            ))}
+          </div>
+        )}
+
+        {filtered.length === 0 ? (
+          <EmptyState
+            title={inventory.length === 0 ? "在庫がありません" : "この絞り込みに一致する在庫はありません"}
+            description={inventory.length === 0 ? "上のフォーム、または写真取込から追加してください。" : undefined}
+          />
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {filtered.map((item) => {
+              const fm = item.flavorMasterId ? flavorById.get(item.flavorMasterId) : undefined;
+              const brand = itemBrand(item);
+              const flavorName = fm
+                ? fm.displayNameJa ?? fm.name
+                : item.customName ?? "(無名)";
+              return (
+                <Card key={item.id} className="lisso-card-hover">
+                  <CardContent className="py-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="lisso-mono text-[11px] text-muted-foreground truncate">
+                          {brand}
+                        </div>
+                        {fm ? (
+                          <Link
+                            href={`/flavors/${fm.id}`}
+                            className="text-sm font-medium hover:underline break-words"
+                          >
+                            {flavorName}
+                          </Link>
+                        ) : (
+                          <span className="text-sm font-medium break-words">{flavorName}</span>
+                        )}
+                      </div>
+                      <Badge variant={STATUS_VARIANT[item.status] ?? "muted"}>{item.status}</Badge>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1">
+                      {item.amountGram != null && <Badge variant="muted">{item.amountGram}g</Badge>}
+                      <Badge variant="outline">{item.source}</Badge>
+                      {!fm && <Badge variant="warn">custom</Badge>}
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-1 border-t">
+                      <form
+                        action={updateInventoryStatusAction}
+                        className="flex items-center gap-1 mt-2"
+                      >
+                        <input type="hidden" name="id" value={item.id} />
+                        <Select name="status" defaultValue={item.status} className="h-8 w-24">
+                          <option value="in_stock">在庫あり</option>
+                          <option value="low">わずか</option>
+                          <option value="out">切れ</option>
+                          <option value="planned">予定</option>
+                        </Select>
+                        <Button size="sm" variant="outline" type="submit">
+                          更新
+                        </Button>
+                      </form>
+                      <form action={removeInventoryAction} className="mt-2 ml-auto">
+                        <input type="hidden" name="id" value={item.id} />
+                        <Button size="sm" variant="destructive" type="submit">
+                          削除
+                        </Button>
+                      </form>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
+  );
+}
+
+function BrandChip({
+  label,
+  href,
+  active,
+}: {
+  label: string;
+  href: string;
+  active: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`rounded-sm border px-2.5 py-1 text-xs transition-colors ${
+        active
+          ? "bg-secondary text-foreground border-border"
+          : "text-muted-foreground hover:text-foreground hover:border-foreground/30"
+      }`}
+    >
+      {label}
+    </Link>
   );
 }
