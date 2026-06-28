@@ -11,9 +11,9 @@ describe("matcher", () => {
   });
 
   it("matches brand + flavor + size with high confidence", () => {
-    const m = matchText("Deus Earl Grey 50g", seedBrands, seedFlavors);
-    expect(m.detectedBrand).toBe("Deus");
-    expect(m.matchedFlavorMasterId).toBe("fm_deus_earlgrey");
+    const m = matchText("Afzal Earl Grey 50g", seedBrands, seedFlavors);
+    expect(m.detectedBrand).toBe("Afzal");
+    expect(m.matchedFlavorMasterId).toBe("fm_afzal_earl_grey");
     expect(m.detectedAmountGram).toBe(50);
     expect(m.matchConfidence).toBeGreaterThanOrEqual(0.8);
   });
