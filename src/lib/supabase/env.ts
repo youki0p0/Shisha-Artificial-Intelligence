@@ -20,3 +20,11 @@ export const SUPABASE_ANON_KEY =
 export function isSupabaseConfigured(): boolean {
   return Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 }
+
+/**
+ * When true, the login screen only offers password sign-in (magic-link and
+ * sign-up tabs are hidden). Handy when email delivery isn't configured.
+ * Set NEXT_PUBLIC_AUTH_PASSWORD_ONLY=true to enable.
+ */
+export const AUTH_PASSWORD_ONLY =
+  process.env.NEXT_PUBLIC_AUTH_PASSWORD_ONLY === "true";

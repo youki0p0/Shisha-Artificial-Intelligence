@@ -3,9 +3,17 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { getBrowserSupabase } from "@/lib/supabase/client";
-import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { AUTH_PASSWORD_ONLY, isSupabaseConfigured } from "@/lib/supabase/env";
 
 type Mode = "signin" | "signup" | "magic";
+
+/** Read a safe in-app `?next=` redirect target (defaults to "/"). */
+function nextTarget(): string {
+  if (typeof window === "undefined") return "/";
+  const n = new URLSearchParams(window.location.search).get("next");
+  // Only allow same-site absolute paths to avoid open redirects.
+  return n && n.startsWith("/") && !n.startsWith("//") ? n : "/";
+}
 
 /** Reject after `ms` so a hung auth request can never freeze the button. */
 function withTimeout<T>(p: Promise<T>, ms = 20000): Promise<T> {
@@ -72,12 +80,11 @@ export default function LoginPage() {
         );
       }
       const sb = getBrowserSupabase();
+      const next = nextTarget();
+      const redirectTo = `${location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
       if (mode === "magic") {
         const { error } = await withTimeout(
-          sb.auth.signInWithOtp({
-            email,
-            options: { emailRedirectTo: `${location.origin}/auth/callback` },
-          }),
+          sb.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo } }),
         );
         if (error) throw error;
         setMessage("ログイン用リンクをメールに送りました。メールを確認してください。");
@@ -85,11 +92,7 @@ export default function LoginPage() {
       }
       if (mode === "signup") {
         const { error } = await withTimeout(
-          sb.auth.signUp({
-            email,
-            password,
-            options: { emailRedirectTo: `${location.origin}/auth/callback` },
-          }),
+          sb.auth.signUp({ email, password, options: { emailRedirectTo: redirectTo } }),
         );
         if (error) throw error;
         setMessage("確認メールを送りました。リンクを開くと登録が完了します。");
@@ -99,7 +102,7 @@ export default function LoginPage() {
         sb.auth.signInWithPassword({ email, password }),
       );
       if (error) throw error;
-      router.push("/");
+      router.push(next);
       router.refresh();
     } catch (err) {
       setError(describeAuthError(err));
@@ -116,32 +119,34 @@ export default function LoginPage() {
         ログインすると、在庫とレシピがあなた専用に保存されます。
       </p>
 
-      <div className="flex gap-1 mb-5 text-sm">
-        {(
-          [
-            ["signin", "パスワード"],
-            ["signup", "新規登録"],
-            ["magic", "メールリンク"],
-          ] as [Mode, string][]
-        ).map(([m, label]) => (
-          <button
-            key={m}
-            type="button"
-            onClick={() => {
-              setMode(m);
-              setError(null);
-              setMessage(null);
-            }}
-            className={`px-3 py-1.5 rounded-sm transition-colors ${
-              mode === m
-                ? "bg-secondary text-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      {!AUTH_PASSWORD_ONLY && (
+        <div className="flex gap-1 mb-5 text-sm">
+          {(
+            [
+              ["signin", "パスワード"],
+              ["signup", "新規登録"],
+              ["magic", "メールリンク"],
+            ] as [Mode, string][]
+          ).map(([m, label]) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => {
+                setMode(m);
+                setError(null);
+                setMessage(null);
+              }}
+              className={`px-3 py-1.5 rounded-sm transition-colors ${
+                mode === m
+                  ? "bg-secondary text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
 
       <form onSubmit={onSubmit} className="space-y-3">
         <label className="block text-sm">
