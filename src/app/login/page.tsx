@@ -3,8 +3,22 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { getBrowserSupabase } from "@/lib/supabase/client";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 
 type Mode = "signin" | "signup" | "magic";
+
+/** Reject after `ms` so a hung auth request can never freeze the button. */
+function withTimeout<T>(p: Promise<T>, ms = 20000): Promise<T> {
+  return Promise.race([
+    p,
+    new Promise<T>((_, reject) =>
+      setTimeout(
+        () => reject(new Error("タイムアウトしました。通信環境やSupabase設定をご確認ください。")),
+        ms,
+      ),
+    ),
+  ]);
+}
 
 /**
  * Map common Supabase Auth errors to actionable Japanese guidance. The raw
@@ -31,7 +45,7 @@ function describeAuthError(err: unknown): string {
   if (m.includes("email not confirmed")) {
     return "メールアドレスが未確認です。届いた確認リンクを開いてください。";
   }
-  return `送信に失敗しました: ${raw}`;
+  return `エラー: ${raw}`;
 }
 
 export default function LoginPage() {
@@ -48,28 +62,42 @@ export default function LoginPage() {
     setBusy(true);
     setError(null);
     setMessage(null);
-    const sb = getBrowserSupabase();
     try {
+      // Guard first: with no Supabase env (e.g. a preview deploy missing the
+      // vars) createBrowserClient throws synchronously — surface it instead of
+      // hanging on "処理中…".
+      if (!isSupabaseConfigured()) {
+        throw new Error(
+          "この環境にSupabaseの接続情報が設定されていません。Vercelの環境変数 NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY を（Preview含め）設定してください。",
+        );
+      }
+      const sb = getBrowserSupabase();
       if (mode === "magic") {
-        const { error } = await sb.auth.signInWithOtp({
-          email,
-          options: { emailRedirectTo: `${location.origin}/auth/callback` },
-        });
+        const { error } = await withTimeout(
+          sb.auth.signInWithOtp({
+            email,
+            options: { emailRedirectTo: `${location.origin}/auth/callback` },
+          }),
+        );
         if (error) throw error;
         setMessage("ログイン用リンクをメールに送りました。メールを確認してください。");
         return;
       }
       if (mode === "signup") {
-        const { error } = await sb.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: `${location.origin}/auth/callback` },
-        });
+        const { error } = await withTimeout(
+          sb.auth.signUp({
+            email,
+            password,
+            options: { emailRedirectTo: `${location.origin}/auth/callback` },
+          }),
+        );
         if (error) throw error;
         setMessage("確認メールを送りました。リンクを開くと登録が完了します。");
         return;
       }
-      const { error } = await sb.auth.signInWithPassword({ email, password });
+      const { error } = await withTimeout(
+        sb.auth.signInWithPassword({ email, password }),
+      );
       if (error) throw error;
       router.push("/");
       router.refresh();
