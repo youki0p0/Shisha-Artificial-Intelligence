@@ -3,8 +3,50 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { getBrowserSupabase } from "@/lib/supabase/client";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 
 type Mode = "signin" | "signup" | "magic";
+
+/** Reject after `ms` so a hung auth request can never freeze the button. */
+function withTimeout<T>(p: Promise<T>, ms = 20000): Promise<T> {
+  return Promise.race([
+    p,
+    new Promise<T>((_, reject) =>
+      setTimeout(
+        () => reject(new Error("タイムアウトしました。通信環境やSupabase設定をご確認ください。")),
+        ms,
+      ),
+    ),
+  ]);
+}
+
+/**
+ * Map common Supabase Auth errors to actionable Japanese guidance. The raw
+ * message is still shown (small) so config issues are diagnosable.
+ */
+function describeAuthError(err: unknown): string {
+  const raw = err instanceof Error ? err.message : String(err);
+  const m = raw.toLowerCase();
+  if (m.includes("rate limit") || m.includes("too many") || m.includes("429")) {
+    return "短時間に送りすぎです。数分おいてから再度お試しください。";
+  }
+  if (m.includes("redirect") && (m.includes("not allowed") || m.includes("invalid"))) {
+    return "リダイレクトURLが許可されていません。Supabase の Authentication → URL Configuration に、このサイトの /auth/callback を追加してください。";
+  }
+  if (m.includes("sending") || m.includes("smtp") || m.includes("email") && m.includes("error")) {
+    return "メールの送信に失敗しました。Supabase の Authentication → Email/SMTP 設定（カスタムSMTP）をご確認ください。";
+  }
+  if (m.includes("signups not allowed") || m.includes("signup is disabled")) {
+    return "新規登録が無効になっています。Supabase の Authentication → Providers でメール登録を有効にしてください。";
+  }
+  if (m.includes("invalid login credentials")) {
+    return "メールアドレスまたはパスワードが違います。";
+  }
+  if (m.includes("email not confirmed")) {
+    return "メールアドレスが未確認です。届いた確認リンクを開いてください。";
+  }
+  return `エラー: ${raw}`;
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,33 +62,47 @@ export default function LoginPage() {
     setBusy(true);
     setError(null);
     setMessage(null);
-    const sb = getBrowserSupabase();
     try {
+      // Guard first: with no Supabase env (e.g. a preview deploy missing the
+      // vars) createBrowserClient throws synchronously — surface it instead of
+      // hanging on "処理中…".
+      if (!isSupabaseConfigured()) {
+        throw new Error(
+          "この環境にSupabaseの接続情報が設定されていません。Vercelの環境変数 NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY を（Preview含め）設定してください。",
+        );
+      }
+      const sb = getBrowserSupabase();
       if (mode === "magic") {
-        const { error } = await sb.auth.signInWithOtp({
-          email,
-          options: { emailRedirectTo: `${location.origin}/auth/callback` },
-        });
+        const { error } = await withTimeout(
+          sb.auth.signInWithOtp({
+            email,
+            options: { emailRedirectTo: `${location.origin}/auth/callback` },
+          }),
+        );
         if (error) throw error;
         setMessage("ログイン用リンクをメールに送りました。メールを確認してください。");
         return;
       }
       if (mode === "signup") {
-        const { error } = await sb.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: `${location.origin}/auth/callback` },
-        });
+        const { error } = await withTimeout(
+          sb.auth.signUp({
+            email,
+            password,
+            options: { emailRedirectTo: `${location.origin}/auth/callback` },
+          }),
+        );
         if (error) throw error;
         setMessage("確認メールを送りました。リンクを開くと登録が完了します。");
         return;
       }
-      const { error } = await sb.auth.signInWithPassword({ email, password });
+      const { error } = await withTimeout(
+        sb.auth.signInWithPassword({ email, password }),
+      );
       if (error) throw error;
       router.push("/");
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "ログインに失敗しました。");
+      setError(describeAuthError(err));
     } finally {
       setBusy(false);
     }
