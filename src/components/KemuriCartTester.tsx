@@ -101,17 +101,50 @@ export function KemuriCartTester() {
         />
       </div>
 
-      {/* 案1: this browser's own Kemuri session (recommended) */}
+      {/* 案A: open each item page first-party (works on Safari / mobile) */}
       <div className="rounded-sm border p-3 space-y-2">
-        <div className="text-sm font-medium">このブラウザのカートに入れる（おすすめ）</div>
+        <div className="text-sm font-medium">Kemuriで開いて入れる（Safari・スマホ対応・おすすめ）</div>
         <p className="text-[11px] text-muted-foreground">
-          先に <code>shop.kemuri.site</code> に同じブラウザでログインしておくと、あなたの会員カートに入ります（未ログインなら同ブラウザのゲストカート）。
+          各商品ページが <code>shop.kemuri.site</code> 上（first-party）で開くので、その画面の「カートに入れる」をタップすれば
+          どのブラウザでも確実にあなたのカートに入ります。先にKemuriにログインしておくと会員カートに入ります。
         </p>
-        <Button type="button" onClick={addInThisBrowser} disabled={directBusy}>
-          {directBusy ? "送信中…" : "このブラウザのカートに入れる"}
-        </Button>
-        {directMsg && <p className="text-xs text-foreground">{directMsg}</p>}
+        {parseCodes(codes).length === 0 ? (
+          <p className="text-xs text-muted-foreground">商品コードを入力してください。</p>
+        ) : (
+          <div className="flex flex-wrap gap-1.5">
+            {parseCodes(codes).map(({ code, quantity }) => (
+              <a
+                key={code}
+                href={`${KEMURI_BASE}/view/item/${code}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-sm border px-2.5 py-1 text-xs text-foreground hover:border-foreground/40"
+              >
+                Kemuriで開く: {code}
+                {quantity > 1 ? ` ×${quantity}` : ""}
+              </a>
+            ))}
+          </div>
+        )}
       </div>
+
+      {/* 案1: cross-site direct add — works on Chrome, blocked by Safari ITP */}
+      <details className="rounded-sm border p-3">
+        <summary className="cursor-pointer text-sm text-muted-foreground">
+          このブラウザに直接入れる（Chrome等のみ・Safari不可）
+        </summary>
+        <div className="mt-3 space-y-2">
+          <p className="text-[11px] text-muted-foreground">
+            横断リクエストでこのブラウザのKemuriセッションに直接追加します。Chrome等では反映されますが、
+            <strong>iOS/Safari はサードパーティCookieをブロックするため反映されません</strong>（その場合は上の「Kemuriで開いて入れる」を使用）。
+            先に <code>shop.kemuri.site</code> にログインしておくと会員カートに入ります。
+          </p>
+          <Button type="button" onClick={addInThisBrowser} disabled={directBusy}>
+            {directBusy ? "送信中…" : "このブラウザに直接入れる（Chrome等）"}
+          </Button>
+          {directMsg && <p className="text-xs text-foreground">{directMsg}</p>}
+        </div>
+      </details>
 
       {/* 案: server-side (member via creds/env, or guest) */}
       <details className="rounded-sm border p-3">
@@ -184,8 +217,8 @@ export function KemuriCartTester() {
         </div>
       )}
       <p className="text-[11px] text-muted-foreground">
-        ※ おすすめは上の「このブラウザのカートに入れる」。iOS Safari など
-        サードパーティCookieをブロックするブラウザで反映されない場合のみ、サーバー経由をお使いください。
+        ※ スマホ（iOS Safari 含む）では「Kemuriで開いて入れる」が確実です（商品ページを first-party で開いて、その画面のカートボタンをタップ）。
+        「直接入れる」は Chrome 等のみ・Safari不可。サーバー経由は動作確認用です。
       </p>
     </div>
   );
