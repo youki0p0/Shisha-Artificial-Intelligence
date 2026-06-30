@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Input } from "@/components/ui/primitives";
+import { Button, Input, Label } from "@/components/ui/primitives";
 
 type AddResult = { code: string; ok: boolean; totalQuantity?: number; error?: string };
 type Resp = { loggedIn?: boolean; results?: AddResult[]; cartUrl?: string; error?: string };
@@ -9,6 +9,8 @@ type Resp = { loggedIn?: boolean; results?: AddResult[]; cartUrl?: string; error
 /** Admin-only tester: push商品コード(s) into the Kemuri cart via /api/kemuri/add. */
 export function KemuriCartTester() {
   const [codes, setCodes] = useState("000000000284:1");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [resp, setResp] = useState<Resp | null>(null);
 
@@ -19,7 +21,11 @@ export function KemuriCartTester() {
       const r = await fetch("/api/kemuri/add", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: codes }),
+        body: JSON.stringify({
+          items: codes,
+          email: email || undefined,
+          password: password || undefined,
+        }),
       });
       setResp((await r.json()) as Resp);
     } catch (err) {
@@ -31,18 +37,41 @@ export function KemuriCartTester() {
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-end gap-2">
-        <div className="flex-1 min-w-[220px]">
+      <div>
+        <Label>商品コード（code:数量 をスペース区切り）</Label>
+        <Input
+          value={codes}
+          onChange={(e) => setCodes(e.target.value)}
+          placeholder="000000000284:1 000000002088:2"
+        />
+      </div>
+
+      <div className="grid gap-2 sm:grid-cols-2">
+        <div>
+          <Label>Kemuriログイン メール（任意）</Label>
           <Input
-            value={codes}
-            onChange={(e) => setCodes(e.target.value)}
-            placeholder="商品コード（例: 000000000284:1 000000002088:2）"
+            type="email"
+            autoComplete="off"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="未入力ならゲストカート / env優先"
           />
         </div>
-        <Button type="button" onClick={submit} disabled={busy}>
-          {busy ? "投入中…" : "カートに入れる"}
-        </Button>
+        <div>
+          <Label>Kemuriログイン パスワード（任意）</Label>
+          <Input
+            type="password"
+            autoComplete="off"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="会員カートに入れる場合のみ"
+          />
+        </div>
       </div>
+
+      <Button type="button" onClick={submit} disabled={busy}>
+        {busy ? "投入中…" : "カートに入れる"}
+      </Button>
 
       {resp && (
         <div className="rounded-sm border p-3 text-sm space-y-1.5">
@@ -78,8 +107,9 @@ export function KemuriCartTester() {
         </div>
       )}
       <p className="text-[11px] text-muted-foreground">
-        ※ ヘッドレスブラウザ不要のHTTP方式。会員カートに紐づけるには Vercel 環境変数に
-        KEMURI_EMAIL / KEMURI_PASS を設定してください（未設定ならゲストカート）。
+        ※ ヘッドレスブラウザ不要のHTTP方式。会員カートに入れるには上のログイン欄（任意）に
+        Kemuriの認証情報を入れるか、Vercel 環境変数 KEMURI_EMAIL / KEMURI_PASS を設定してください。
+        どちらも未設定ならゲストカートに入ります。入力値は保存しません。
       </p>
     </div>
   );

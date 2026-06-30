@@ -19,7 +19,11 @@ export async function POST(req: NextRequest) {
   }
 
   const body = (await req.json().catch(() => null)) as
-    | { items?: string | { code: string; quantity?: number }[] }
+    | {
+        items?: string | { code: string; quantity?: number }[];
+        email?: string;
+        password?: string;
+      }
     | null;
   if (!body?.items) {
     return NextResponse.json({ error: "items_required" }, { status: 400 });
@@ -35,8 +39,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "no_valid_items" }, { status: 400 });
   }
 
-  const id = process.env.KEMURI_EMAIL;
-  const password = process.env.KEMURI_PASS;
+  // Credentials: prefer the (admin-supplied) request body, fall back to server
+  // env. Body creds are used in-request only — never persisted or logged.
+  const id = body.email?.trim() || process.env.KEMURI_EMAIL;
+  const password = body.password || process.env.KEMURI_PASS;
   const creds = id && password ? { id, password } : undefined;
 
   try {
