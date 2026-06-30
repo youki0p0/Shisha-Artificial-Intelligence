@@ -51,9 +51,17 @@ export async function getCurrentUser(): Promise<UserProfile> {
     const { data } = await sb.auth.getUser();
     const authUser = data.user;
     if (!authUser) return anonProfile(); // pages should gate on isLoggedIn()
-    const profile = await repos.users.getById(authUser.id);
+    // The profiles row is created by a DB trigger on signup; right after the
+    // first login it can lag a beat. Retry once so the real role (e.g. admin)
+    // is reflected instead of falling back to a synthesized "user".
+    let profile = await repos.users.getById(authUser.id);
+    if (!profile) {
+      await new Promise((r) => setTimeout(r, 400));
+      profile = await repos.users.getById(authUser.id);
+    }
     if (profile) return profile;
-    // Profile row not yet visible (e.g. just signed up) — synthesize from auth.
+    // Profile row still not visible — synthesize from auth (role defaults to
+    // "user"; an admin role set later via SQL will appear on the next load).
     const now = new Date().toISOString();
     return {
       id: authUser.id,

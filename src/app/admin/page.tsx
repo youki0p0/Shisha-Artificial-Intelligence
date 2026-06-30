@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { getRepositories } from "@/repositories";
-import { getCurrentUser, isAdmin, isCuratorOrAdmin } from "@/lib/auth";
+import { getCurrentUser, isAdmin, isCuratorOrAdmin, isLoggedIn } from "@/lib/auth";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 import {
   addCurationNoteAction,
   addShiftAction,
@@ -82,6 +84,10 @@ export default async function AdminPage({
   searchParams: Promise<{ fq?: string; fid?: string; pm?: string }>;
 }) {
   const { fq, fid, pm } = await searchParams;
+  // Logged-out users (Supabase mode) → login, returning to /admin afterwards.
+  if (isSupabaseConfigured() && !(await isLoggedIn())) {
+    redirect("/login?next=/admin");
+  }
   const user = await getCurrentUser();
   const repos = getRepositories();
   const [brands, flavors, tasteWords, synergy, heat, submissions, allNotes, users] =
