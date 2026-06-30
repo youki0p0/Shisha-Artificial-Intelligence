@@ -24,6 +24,7 @@ import {
 } from "@/lib/wages";
 import { formatDate, monthOf, summarizePayroll } from "@/lib/shifts";
 import type { ShiftEntry } from "@/domain/types";
+import { KemuriCartTester } from "@/components/KemuriCartTester";
 import {
   Badge,
   Button,
@@ -241,6 +242,17 @@ export default async function AdminPage({
             <p className="text-[11px] text-muted-foreground">
               ※ 総支給額（控除前）。各行の「明細」から従業員に渡す給与明細を開けます。時給の変更・勤務追加は下の「ユーザー管理」から行えます。
             </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {isAdmin(user) && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Kemuri カート投入（管理者専用・試験）</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <KemuriCartTester />
           </CardContent>
         </Card>
       )}
