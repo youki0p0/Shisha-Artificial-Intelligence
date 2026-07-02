@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "seed": "tsx scripts/seed.ts",
-    "flavors:build": "tsx scripts/buildFlavorMaster.ts"
+    "flavors:build": "tsx scripts/buildFlavorMaster.ts",
+    "flavors:export-sns": "tsx scripts/exportSnsFlavorMaster.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
